@@ -2,6 +2,8 @@
 
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
+import { faCalculator, faInfoCircle, faBaby, faPlus } from "@fortawesome/pro-solid-svg-icons"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -136,7 +138,7 @@ const TaxFreeChildcareCalculator = () => {
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-primary/10 rounded-lg">
-              <i className="fas fa-calculator fa-lg text-primary"></i>
+              <FontAwesomeIcon icon={faCalculator} size="lg" className="text-primary" />
             </div>
             <div>
               <h1 className="text-2xl font-bold text-balance font-public-sans">TFC Calculator</h1>
@@ -152,7 +154,7 @@ const TaxFreeChildcareCalculator = () => {
         <Card className="mb-8">
           <CardContent className="pt-6">
             <div className="flex items-start gap-3">
-              <i className="fas fa-info-circle fa-lg text-primary mt-0.5 flex-shrink-0"></i>
+              <FontAwesomeIcon icon={faInfoCircle} size="lg" className="text-primary mt-0.5 flex-shrink-0" />
               <div className="space-y-2">
                 <p className="text-sm text-pretty leading-relaxed font-source-sans">
                   Add your childcare costs and we'll show how much you need to pay into your Tax-Free Childcare account
@@ -183,7 +185,7 @@ const TaxFreeChildcareCalculator = () => {
             <CardContent>
               <div className="flex flex-col items-center gap-4">
                 <div className="p-4 bg-muted rounded-full">
-                  <i className="fas fa-baby fa-2x text-muted-foreground"></i>
+                  <FontAwesomeIcon icon={faBaby} size="2x" className="text-muted-foreground" />
                 </div>
                 <div className="space-y-2">
                   <h3 className="text-lg font-semibold font-public-sans">No children added yet</h3>
@@ -192,7 +194,7 @@ const TaxFreeChildcareCalculator = () => {
                   </p>
                 </div>
                 <Button onClick={() => setIsAddChildOpen(true)} className="mt-2">
-                  <i className="fas fa-plus fa-sm mr-2"></i>
+                  <FontAwesomeIcon icon={faPlus} size="sm" className="mr-2" />
                   Add Your First Child
                 </Button>
               </div>
@@ -219,7 +221,7 @@ const TaxFreeChildcareCalculator = () => {
                   onClick={() => setIsAddChildOpen(true)}
                   className="w-full h-16 text-muted-foreground hover:text-foreground"
                 >
-                  <i className="fas fa-plus fa-lg mr-2"></i>
+                  <FontAwesomeIcon icon={faPlus} size="lg" className="mr-2" />
                   Add Another Child
                 </Button>
               </CardContent>
