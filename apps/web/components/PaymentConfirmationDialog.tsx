@@ -10,6 +10,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faPoundSign, faCalendar, faReceipt } from "@fortawesome/pro-solid-svg-icons"
+import { trackEvent } from "@/lib/analytics"
 
 type Payment = {
   id: string
@@ -67,6 +68,15 @@ const PaymentConfirmationDialog = ({
       // Reset form when opening
       setDate(new Date().toISOString().split("T")[0] || "")
       setDescription("")
+
+      // Track dialog opening
+      trackEvent("payment_dialog_opened", {
+        payment_amount: suggestedAmount,
+        government_topup: suggestedTopUp
+      })
+    } else {
+      // Track dialog cancellation if form wasn't submitted
+      trackEvent("payment_dialog_cancelled")
     }
     onOpenChange(newOpen)
   }
@@ -80,7 +90,7 @@ const PaymentConfirmationDialog = ({
             Confirm Payment
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            Record a payment made for {childName || "this child"}'s childcare
+            Record a payment made for {childName || "this child"}&apos;s childcare
           </p>
         </DialogHeader>
 

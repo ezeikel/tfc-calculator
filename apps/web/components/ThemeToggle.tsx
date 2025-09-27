@@ -4,6 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faMoon, faSunBright } from "@fortawesome/pro-solid-svg-icons"
+import { trackEvent } from "@/lib/analytics"
 
 const ThemeToggle = () => {
   const [isDark, setIsDark] = useState(false)
@@ -30,6 +31,11 @@ const ThemeToggle = () => {
       document.documentElement.classList.remove("dark")
       localStorage.setItem("theme", "light")
     }
+
+    // Track theme toggle
+    trackEvent("theme_toggled", {
+      theme: newTheme ? "dark" : "light"
+    })
   }
 
   return (

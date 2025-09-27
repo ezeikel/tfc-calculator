@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -10,6 +10,7 @@ import { Separator } from "@/components/ui/separator"
 import { Progress } from "@/components/ui/progress"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faCalculator, faCalendar, faPoundSign, faExclamationCircle, faTrash, faPen, faReceipt, faClockRotateLeft } from "@fortawesome/pro-solid-svg-icons"
+import { trackEvent } from "@/lib/analytics"
 import { PaymentConfirmationDialog, type Payment } from "./PaymentConfirmationDialog"
 import { PaymentHistory } from "./PaymentHistory"
 
@@ -116,9 +117,30 @@ const ChildCalculator = ({
   const daysRemaining = getDaysRemainingInQuarter()
   const progressPercentage = (calculation.confirmedTopUpUsed / 500) * 100
 
+  // Track quarterly limit events
+  useEffect(() => {
+    if (calculation.isAtLimit) {
+      trackEvent("quarterly_limit_reached", {
+        total_quarterly_received: calculation.confirmedTopUpUsed,
+        child_count: 1
+      })
+    } else if (calculation.exceedsLimit) {
+      trackEvent("quarterly_limit_warning", {
+        total_quarterly_received: calculation.confirmedTopUpUsed,
+        quarterly_limit_remaining: calculation.remainingThisQuarter,
+        childcare_cost: parseFloat(childcareCost) || 0
+      })
+    }
+  }, [calculation.isAtLimit, calculation.exceedsLimit, calculation.confirmedTopUpUsed, calculation.remainingThisQuarter, childcareCost])
+
   const handleNameEdit = () => {
     onUpdate({ name: editName.trim() || undefined })
     setIsEditing(false)
+
+    // Track name update
+    trackEvent("child_name_updated", {
+      has_child_name: !!(editName.trim())
+    })
   }
 
   const handleConfirmPayment = (payment: Omit<Payment, "id">) => {
@@ -179,7 +201,12 @@ const ChildCalculator = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => setShowPaymentHistory(!showPaymentHistory)}
+                onClick={() => {
+                  setShowPaymentHistory(!showPaymentHistory)
+                  if (!showPaymentHistory) {
+                    trackEvent("payment_history_viewed")
+                  }
+                }}
                 className="h-8 text-xs"
               >
                 <FontAwesomeIcon icon={faClockRotateLeft} size="xs" className="mr-1" />
@@ -210,7 +237,7 @@ const ChildCalculator = ({
           {calculation.isAtLimit && (
             <div className="flex items-center gap-2 text-xs text-warning">
               <FontAwesomeIcon icon={faExclamationCircle} size="xs" />
-              You've reached the quarterly limit
+              You&apos;ve reached the quarterly limit
             </div>
           )}
         </div>
@@ -277,7 +304,18 @@ const ChildCalculator = ({
               </div>
 
               <Button
-                onClick={() => setShowPaymentDialog(true)}
+                onClick={() => {
+                  setShowPaymentDialog(true)
+
+                  // Track calculation and dialog opening
+                  trackEvent("childcare_cost_calculated", {
+                    childcare_cost: parseFloat(childcareCost) || 0,
+                    calculated_parent_payment: calculation.userPayment,
+                    calculated_government_topup: calculation.governmentTopUp,
+                    is_over_limit: calculation.exceedsLimit,
+                    quarterly_limit_remaining: calculation.remainingThisQuarter
+                  })
+                }}
                 className="w-full"
                 disabled={calculation.governmentTopUp <= 0}
               >

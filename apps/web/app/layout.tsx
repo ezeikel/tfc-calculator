@@ -9,13 +9,13 @@ import { Analytics } from "@vercel/analytics/next"
 config.autoAddCss = false;
 
 const publicSans = Public_Sans({
-  subsets: ["latin"],
+  subsets: ["latin"] as const,
   variable: "--font-public-sans",
   display: "swap",
 })
 
 const sourceSans = Source_Sans_3({
-  subsets: ["latin"],
+  subsets: ["latin"] as const,
   variable: "--font-source-sans",
   display: "swap",
 })
@@ -61,9 +61,9 @@ export const metadata: Metadata = {
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode
-}>) {
+}) {
   return (
     <html lang="en">
       <body className={`font-source-sans ${publicSans.variable} ${sourceSans.variable}`}>

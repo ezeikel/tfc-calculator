@@ -11,6 +11,7 @@ import { ChildCalculator } from "@/components/ChildCalculator"
 import { AddChildDialog } from "@/components/AddChildDialog"
 import { ThemeToggle } from "@/components/ThemeToggle"
 import { useTheme } from "@/hooks/useTheme"
+import { trackEvent, getChildAnalyticsProperties } from "@/lib/analytics"
 import type { Payment } from "@/components/PaymentConfirmationDialog"
 
 type Child = {
@@ -98,6 +99,12 @@ const TaxFreeChildcareCalculator = () => {
       id: crypto.randomUUID(),
     }
     setChildren([...children, newChild])
+
+    // Track child addition
+    trackEvent("child_added", {
+      ...getChildAnalyticsProperties([...children, newChild]),
+      has_child_name: !!(child.name && child.name.trim().length > 0)
+    })
   }
 
   const updateChild = (id: string, updates: Partial<Child>) => {
@@ -105,8 +112,14 @@ const TaxFreeChildcareCalculator = () => {
   }
 
   const removeChild = (id: string) => {
-    setChildren(children.filter((child) => child.id !== id))
+    const remainingChildren = children.filter((child) => child.id !== id)
+    setChildren(remainingChildren)
     setPayments(payments.filter((payment) => payment.childId !== id))
+
+    // Track child removal
+    trackEvent("child_removed", {
+      ...getChildAnalyticsProperties(remainingChildren)
+    })
   }
 
   const addPayment = (payment: Omit<Payment, "id">) => {
@@ -115,6 +128,13 @@ const TaxFreeChildcareCalculator = () => {
       id: crypto.randomUUID(),
     }
     setPayments([...payments, newPayment])
+
+    // Track payment addition
+    trackEvent("payment_added", {
+      payment_amount: payment.amount,
+      government_topup: payment.governmentTopUp,
+      payment_description_provided: !!(payment.description && payment.description.trim().length > 0)
+    })
   }
 
   const removePayment = (paymentId: string) => {
@@ -129,6 +149,14 @@ const TaxFreeChildcareCalculator = () => {
       }
     }
     setPayments(payments.filter((payment) => payment.id !== paymentId))
+
+    // Track payment removal
+    if (payment) {
+      trackEvent("payment_removed", {
+        payment_amount: payment.amount,
+        government_topup: payment.governmentTopUp
+      })
+    }
   }
 
   return (
@@ -157,7 +185,7 @@ const TaxFreeChildcareCalculator = () => {
               <FontAwesomeIcon icon={faInfoCircle} size="lg" className="text-primary mt-0.5 flex-shrink-0" />
               <div className="space-y-2">
                 <p className="text-sm text-pretty leading-relaxed font-source-sans">
-                  Add your childcare costs and we'll show how much you need to pay into your Tax-Free Childcare account
+                  Add your childcare costs and we&apos;ll show how much you need to pay into your Tax-Free Childcare account
                   — and how much the government will top up, based on your current usage this quarter.
                 </p>
                 <div className="flex flex-wrap gap-2">
@@ -193,7 +221,10 @@ const TaxFreeChildcareCalculator = () => {
                     Add your first child to start calculating government contributions for your childcare costs.
                   </p>
                 </div>
-                <Button onClick={() => setIsAddChildOpen(true)} className="mt-2">
+                <Button onClick={() => {
+                  setIsAddChildOpen(true)
+                  trackEvent("add_child_dialog_opened", { button_location: "empty_state" })
+                }} className="mt-2">
                   <FontAwesomeIcon icon={faPlus} size="sm" className="mr-2" />
                   Add Your First Child
                 </Button>
@@ -218,7 +249,10 @@ const TaxFreeChildcareCalculator = () => {
               <CardContent className="pt-6">
                 <Button
                   variant="ghost"
-                  onClick={() => setIsAddChildOpen(true)}
+                  onClick={() => {
+                    setIsAddChildOpen(true)
+                    trackEvent("add_child_dialog_opened", { button_location: "add_another" })
+                  }}
                   className="w-full h-16 text-muted-foreground hover:text-foreground"
                 >
                   <FontAwesomeIcon icon={faPlus} size="lg" className="mr-2" />
@@ -237,7 +271,11 @@ const TaxFreeChildcareCalculator = () => {
               Take your Tax-Free Childcare calculations on the go with our mobile app
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <a href="#" className="hover:opacity-80 transition-opacity">
+              <a
+                href="#"
+                className="hover:opacity-80 transition-opacity"
+                onClick={() => trackEvent("play_store_clicked", { theme: isDark ? "dark" : "light" })}
+              >
                 <Image
                   src={isDark ? "/play-store-dark.svg" : "/play-store-light.svg"}
                   alt="Get it on Google Play"
@@ -247,7 +285,11 @@ const TaxFreeChildcareCalculator = () => {
                 />
               </a>
 
-              <a href="#" className="hover:opacity-80 transition-opacity">
+              <a
+                href="#"
+                className="hover:opacity-80 transition-opacity"
+                onClick={() => trackEvent("app_store_clicked", { theme: isDark ? "dark" : "light" })}
+              >
                 <Image
                   src={isDark ? "/app-store-dark.svg" : "/app-store-light.svg"}
                   alt="Download on the App Store"

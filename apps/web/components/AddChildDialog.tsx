@@ -9,6 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faBaby } from "@fortawesome/pro-solid-svg-icons"
+import { trackEvent } from "@/lib/analytics"
 
 type Child = {
   name?: string
@@ -57,6 +58,9 @@ const AddChildDialog = ({ open, onOpenChange, onAddChild }: AddChildDialogProps)
     setReconfirmationDate("")
     setQuarterlyTopUpReceived("0")
     onOpenChange(false)
+
+    // Track dialog cancellation
+    trackEvent("add_child_dialog_cancelled")
   }
 
   return (
@@ -76,7 +80,7 @@ const AddChildDialog = ({ open, onOpenChange, onAddChild }: AddChildDialogProps)
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="child-name">Child's Name (Optional)</Label>
+            <Label htmlFor="child-name">Child&apos;s Name (Optional)</Label>
             <Input
               id="child-name"
               value={name}
