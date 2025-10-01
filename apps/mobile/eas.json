@@ -1,0 +1,65 @@
+{
+  "cli": {
+    "promptToConfigurePushNotifications": false,
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "base": {
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "channel": "base"
+    },
+    "development": {
+      "extends": "base",
+      "developmentClient": true,
+      "distribution": "internal",
+      "android": {
+        "image": "latest"
+      },
+      "ios": {
+        "simulator": true,
+        "image": "latest"
+      },
+      "env": {
+        "EXPO_PUBLIC_ENVIRONMENT": "development"
+      },
+      "autoIncrement": false,
+      "channel": "development"
+    },
+    "preview": {
+      "extends": "base",
+      "environment": "preview",
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      },
+      "env": {
+        "EXPO_PUBLIC_ENVIRONMENT": "preview"
+      },
+      "autoIncrement": true,
+      "channel": "preview"
+    },
+    "production": {
+      "extends": "base",
+      "distribution": "store",
+      "env": {
+        "EXPO_PUBLIC_ENVIRONMENT": "production"
+      },
+      "autoIncrement": true,
+      "channel": "production"
+    },
+    "beta": {
+      "extends": "production",
+      "env": {
+        "EXPO_PUBLIC_ENVIRONMENT": "beta"
+      },
+      "autoIncrement": true,
+      "channel": "beta"
+    }
+  },
+  "submit": {}
+}

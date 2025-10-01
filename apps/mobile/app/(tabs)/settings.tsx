@@ -1,0 +1,211 @@
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Alert,
+  Linking,
+} from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
+import { faCalculator, faExclamationTriangle, faChevronRight, faDownload, faTrash, faGlobe } from '@fortawesome/free-solid-svg-icons';
+import { faHeart } from '@fortawesome/pro-regular-svg-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Application from 'expo-application';
+
+export default function SettingsScreen() {
+  const [isClearing, setIsClearing] = useState(false);
+
+  const iconMap = {
+    download: faDownload,
+    trash: faTrash,
+    globe: faGlobe,
+    calculator: faCalculator,
+    'exclamation-triangle': faExclamationTriangle,
+    'chevron-right': faChevronRight,
+  };
+
+  const clearAllData = async () => {
+    Alert.alert(
+      'Clear All Data',
+      'This will remove all your children and payment history. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear All',
+          style: 'destructive',
+          onPress: async () => {
+            setIsClearing(true);
+            try {
+              await AsyncStorage.multiRemove(['tfc-children', 'tfc-payments']);
+              Alert.alert('Success', 'All data has been cleared.');
+            } catch {
+              Alert.alert('Error', 'Failed to clear data. Please try again.');
+            }
+            setIsClearing(false);
+          },
+        },
+      ]
+    );
+  };
+
+  const exportData = async () => {
+    try {
+      const children = await AsyncStorage.getItem('tfc-children');
+      const payments = await AsyncStorage.getItem('tfc-payments');
+
+      const data = {
+        children: children ? JSON.parse(children) : [],
+        payments: payments ? JSON.parse(payments) : [],
+        exportDate: new Date().toISOString(),
+      };
+
+      // In a real app, you would implement proper export functionality
+      Alert.alert(
+        'Export Data',
+        `Data ready for export:\n\nChildren: ${data.children.length}\nPayments: ${data.payments.length}\n\nExport functionality coming soon!`
+      );
+    } catch {
+      Alert.alert('Error', 'Failed to export data. Please try again.');
+    }
+  };
+
+  const openHMRCWebsite = () => {
+    Linking.openURL('https://www.gov.uk/tax-free-childcare');
+  };
+
+  const SettingItem = ({
+    icon,
+    title,
+    subtitle,
+    onPress,
+    textColor = 'text-gray-900',
+    loading = false
+  }: {
+    icon: string;
+    title: string;
+    subtitle?: string;
+    onPress: () => void;
+    textColor?: string;
+    loading?: boolean;
+  }) => (
+    <Pressable
+      onPress={onPress}
+      disabled={loading}
+      className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-100 flex-row items-center"
+    >
+      <View className="bg-gray-100 rounded-lg p-2 mr-4">
+        <FontAwesomeIcon icon={iconMap[icon as keyof typeof iconMap]} size={20} color="#6b7280" />
+      </View>
+      <View className="flex-1">
+        <Text className={`font-semibold ${textColor} ${loading ? 'opacity-50' : ''}`}
+          style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+          {title}
+        </Text>
+        {subtitle && (
+          <Text className={`text-sm text-gray-600 mt-1 ${loading ? 'opacity-50' : ''}`}
+            style={{ fontFamily: 'PublicSans_400Regular' }}>
+            {subtitle}
+          </Text>
+        )}
+      </View>
+      <FontAwesomeIcon icon={faChevronRight} size={16} color="#d1d5db" />
+    </Pressable>
+  );
+
+  return (
+    <SafeAreaView className="flex-1 bg-gray-50" edges={['left', 'right']}>
+      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <View className="p-4">
+          {/* App Info */}
+          <View className="bg-white rounded-xl p-6 mb-6 items-center shadow-sm border border-gray-100">
+            <View className="bg-blue-100 rounded-full p-4 mb-4">
+              <FontAwesomeIcon icon={faCalculator} size={32} color="#3b82f6" />
+            </View>
+            <Text className="text-xl font-bold text-center mb-2" style={{ fontFamily: 'PublicSans_700Bold' }}>
+              TFC Calculator
+            </Text>
+            <Text className="text-sm text-gray-600 text-center" style={{ fontFamily: 'PublicSans_400Regular' }}>
+              Calculate government contributions for your childcare costs
+            </Text>
+          </View>
+
+          {/* Data Management */}
+          <View className="mb-6">
+            <Text className="text-lg font-semibold mb-4 px-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+              Data Management
+            </Text>
+
+            <SettingItem
+              icon="download"
+              title="Export Data"
+              subtitle="Save your data to share or backup"
+              onPress={exportData}
+            />
+
+            <SettingItem
+              icon="trash"
+              title="Clear All Data"
+              subtitle="Remove all children and payment history"
+              textColor="text-red-600"
+              onPress={clearAllData}
+              loading={isClearing}
+            />
+          </View>
+
+          {/* Information */}
+          <View className="mb-6">
+            <Text className="text-lg font-semibold mb-4 px-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+              Information
+            </Text>
+
+            <SettingItem
+              icon="globe"
+              title="Official HMRC Information"
+              subtitle="Visit gov.uk for official Tax-Free Childcare information"
+              onPress={openHMRCWebsite}
+            />
+          </View>
+
+          {/* About */}
+          <View className="bg-amber-50 rounded-xl p-4 border border-amber-200">
+            <View className="flex-row items-start">
+              <FontAwesomeIcon icon={faExclamationTriangle} size={16} color="#f59e0b" />
+              <View className="ml-3 flex-1">
+                <Text className="text-sm font-medium text-amber-800" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+                  Important Disclaimer
+                </Text>
+                <Text className="text-sm text-amber-700 mt-1" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                  This calculator is for guidance only. Always check with HMRC for official information about Tax-Free Childcare.
+                </Text>
+              </View>
+            </View>
+          </View>
+
+          {/* Version Info */}
+          <View className="mt-8 items-center">
+            <Text className="text-xs text-gray-500" style={{ fontFamily: 'PublicSans_400Regular' }}>
+              Version {Application.nativeApplicationVersion}
+            </Text>
+            <Text className="text-xs text-gray-500 mt-1" style={{ fontFamily: 'PublicSans_400Regular' }}>
+              Build {Application.nativeBuildVersion}
+            </Text>
+            <View className="flex-row items-center mt-2">
+              <Text className="text-xs text-gray-400" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                Made with{' '}
+              </Text>
+              <FontAwesomeIcon icon={faHeart} size={12} color="#ef4444" />
+              <Text className="text-xs text-gray-400" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                {' '}in{' '}
+              </Text>
+              <Text className="text-xs text-gray-600 font-medium" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+                South London
+              </Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
+  );
+}
