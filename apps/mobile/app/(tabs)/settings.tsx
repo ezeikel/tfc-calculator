@@ -13,6 +13,8 @@ import { faCalculator, faExclamationTriangle, faChevronRight, faDownload, faTras
 import { faHeart } from '@fortawesome/pro-regular-svg-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Application from 'expo-application';
+import { File, Paths } from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
 
 export default function SettingsScreen() {
   const [isClearing, setIsClearing] = useState(false);
@@ -39,6 +41,7 @@ export default function SettingsScreen() {
             setIsClearing(true);
             try {
               await AsyncStorage.multiRemove(['tfc-children', 'tfc-payments']);
+              // TODO: need to update update UI showing stale data from AsyncStorage
               Alert.alert('Success', 'All data has been cleared.');
             } catch {
               Alert.alert('Error', 'Failed to clear data. Please try again.');
@@ -55,18 +58,42 @@ export default function SettingsScreen() {
       const children = await AsyncStorage.getItem('tfc-children');
       const payments = await AsyncStorage.getItem('tfc-payments');
 
-      const data = {
-        children: children ? JSON.parse(children) : [],
-        payments: payments ? JSON.parse(payments) : [],
-        exportDate: new Date().toISOString(),
-      };
+      const childrenData = children ? JSON.parse(children) : [];
+      const paymentsData = payments ? JSON.parse(payments) : [];
 
-      // In a real app, you would implement proper export functionality
-      Alert.alert(
-        'Export Data',
-        `Data ready for export:\n\nChildren: ${data.children.length}\nPayments: ${data.payments.length}\n\nExport functionality coming soon!`
-      );
-    } catch {
+      // Create CSV content
+      let csvContent = 'Type,Child Name,Date of Birth,Reconfirmation Date,Amount,Parent Paid,Government Top Up,Payment Date,Description\n';
+
+      // Add children data
+      childrenData.forEach((child: any) => {
+        csvContent += `Child,"${child.name || 'Unnamed'}","${child.dateOfBirth}","${child.reconfirmationDate}",,,,,\n`;
+      });
+
+      // Add payments data
+      paymentsData.forEach((payment: any) => {
+        const child = childrenData.find((c: any) => c.id === payment.childId);
+        const childName = child?.name || 'Unknown Child';
+        const date = new Date(payment.date).toLocaleDateString();
+        csvContent += `Payment,"${childName}",,,"${payment.amount}","${payment.parentPaid}","${payment.governmentTopUp}","${date}","${payment.description || ''}"\n`;
+      });
+
+      // Write to file
+      const fileName = `tfc-export-${new Date().toISOString().split('T')[0]}.csv`;
+      const file = new File(Paths.cache, fileName);
+
+      await file.write(csvContent, {});
+
+      // Share the file
+      if (await Sharing.isAvailableAsync()) {
+        await Sharing.shareAsync(file.uri, {
+          mimeType: 'text/csv',
+          dialogTitle: 'Export TFC Data',
+        });
+      } else {
+        Alert.alert('Export Complete', `Data exported to: ${fileName}`);
+      }
+    } catch (error) {
+      console.error('Export error:', error);
       Alert.alert('Error', 'Failed to export data. Please try again.');
     }
   };
