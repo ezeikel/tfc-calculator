@@ -4,12 +4,13 @@ import { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faClock, faFilter, faTag } from '@fortawesome/pro-regular-svg-icons';
+import { faClock, faFilter, faTag, faShare } from '@fortawesome/pro-regular-svg-icons';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { PLACEHOLDER_AVATAR_IMAGE, PLACEHOLDER_BLOG_IMAGE } from '@/constants';
+import { trackEvent, getBlogAnalyticsProperties } from '@/lib/analytics';
 import type { Post } from '@/types';
 
 interface BlogPostGridProps {
@@ -20,6 +21,68 @@ interface BlogPostGridProps {
 const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
   const [showAllTags, setShowAllTags] = useState(false);
+
+  const handleTagFilter = (tag: string | null) => {
+    if (tag === null) {
+      trackEvent("blog_filter_cleared", {
+        page: "/blog",
+        filtered_posts_count: posts.length
+      });
+    } else {
+      const filteredCount = posts.filter(post => post.meta.tags.includes(tag)).length;
+      trackEvent("blog_filter_applied", {
+        blog_tag: tag,
+        page: "/blog",
+        filtered_posts_count: filteredCount
+      });
+    }
+    setSelectedTag(tag);
+  };
+
+  const handleShowMoreTags = () => {
+    trackEvent("blog_filter_show_more_clicked", {
+      page: "/blog",
+      button_location: "tag_filter"
+    });
+    setShowAllTags(!showAllTags);
+  };
+
+  const handlePostClick = (post: Post, isFeatured: boolean = false) => {
+    const eventType = isFeatured ? "featured_post_clicked" : "blog_post_clicked";
+    trackEvent(eventType, getBlogAnalyticsProperties(post));
+  };
+
+  const handleSharePost = async (post: Post, event: React.MouseEvent) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const shareUrl = `${window.location.origin}/blog/${post.meta.slug}`;
+    const shareData = {
+      title: post.meta.title,
+      text: post.meta.summary,
+      url: shareUrl,
+    };
+
+    try {
+      if (navigator.share && navigator.canShare?.(shareData)) {
+        await navigator.share(shareData);
+        trackEvent("blog_post_shared", {
+          ...getBlogAnalyticsProperties(post),
+          share_method: "native"
+        });
+      } else {
+        // Fallback to clipboard
+        await navigator.clipboard.writeText(shareUrl);
+        trackEvent("blog_post_shared", {
+          ...getBlogAnalyticsProperties(post),
+          share_method: "clipboard"
+        });
+        // You could add a toast notification here
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
 
   const filteredPosts = selectedTag
     ? posts.filter(post => post.meta.tags.includes(selectedTag))
@@ -41,7 +104,7 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
           <Button
             variant={selectedTag === null ? "default" : "outline"}
             size="sm"
-            onClick={() => setSelectedTag(null)}
+            onClick={() => handleTagFilter(null)}
             className="text-xs"
           >
             All Posts
@@ -51,7 +114,7 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
               key={tag}
               variant={selectedTag === tag ? "default" : "outline"}
               size="sm"
-              onClick={() => setSelectedTag(tag)}
+              onClick={() => handleTagFilter(tag)}
               className="text-xs"
             >
               <FontAwesomeIcon icon={faTag} className="mr-1" />
@@ -62,7 +125,7 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setShowAllTags(!showAllTags)}
+              onClick={handleShowMoreTags}
               className="text-xs text-muted-foreground"
             >
               {showAllTags ? 'Show Less' : `+${tags.length - 8} more`}
@@ -77,8 +140,8 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
           <h2 className="text-lg font-semibold font-public-sans">Featured Articles</h2>
           <div className="grid gap-6 md:grid-cols-2">
             {featuredPosts.slice(0, 2).map(post => (
-              <Link key={post.meta.slug} href={`/blog/${post.meta.slug}`}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+              <Link key={post.meta.slug} href={`/blog/${post.meta.slug}`} onClick={() => handlePostClick(post, true)}>
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full relative group">
                   <div className="relative aspect-video">
                     <Image
                       src={post.meta.image || PLACEHOLDER_BLOG_IMAGE}
@@ -89,6 +152,14 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
                     <Badge className="absolute top-3 left-3 bg-primary text-primary-foreground">
                       Featured
                     </Badge>
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleSharePost(post, e)}
+                    >
+                      <FontAwesomeIcon icon={faShare} className="h-3 w-3" />
+                    </Button>
                   </div>
                   <CardContent className="p-6">
                     <div className="space-y-3">
@@ -167,7 +238,7 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
                 </p>
                 <Button
                   variant="outline"
-                  onClick={() => setSelectedTag(null)}
+                  onClick={() => handleTagFilter(null)}
                   size="sm"
                 >
                   View All Articles
@@ -178,8 +249,8 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredPosts.map(post => (
-              <Link key={post.meta.slug} href={`/blog/${post.meta.slug}`}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+              <Link key={post.meta.slug} href={`/blog/${post.meta.slug}`} onClick={() => handlePostClick(post)}>
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full relative group">
                   <div className="relative aspect-video">
                     <Image
                       src={post.meta.image || PLACEHOLDER_BLOG_IMAGE}
@@ -187,6 +258,14 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
                       fill
                       className="object-cover"
                     />
+                    <Button
+                      size="sm"
+                      variant="secondary"
+                      className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={(e) => handleSharePost(post, e)}
+                    >
+                      <FontAwesomeIcon icon={faShare} className="h-3 w-3" />
+                    </Button>
                   </div>
                   <CardContent className="p-4">
                     <div className="space-y-3">

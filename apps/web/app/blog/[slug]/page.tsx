@@ -3,15 +3,14 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MDXRemote } from 'next-mdx-remote/rsc';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowLeft, faClock, faCalendar, faUser } from '@fortawesome/pro-regular-svg-icons';
-import { faShareNodes } from '@fortawesome/pro-solid-svg-icons';
+import { faArrowLeft, faClock, faCalendar } from '@fortawesome/pro-regular-svg-icons';
 import { getAllPosts, getPostBySlug } from '@/app/actions/blog';
 import MDXComponents from '@/components/MDXComponents';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { PLACEHOLDER_AVATAR_IMAGE, PLACEHOLDER_BLOG_IMAGE } from '@/constants';
+import { PLACEHOLDER_AVATAR_IMAGE } from '@/constants';
+import BlogInteractionButtons from '@/components/BlogInteractionButtons';
 
 export const revalidate = 3600; // revalidate every hour
 
@@ -134,12 +133,7 @@ const BlogPostPage = async ({
               </div>
             </div>
 
-            <div className="sm:ml-auto">
-              <Button variant="outline" size="sm" className="text-xs">
-                <FontAwesomeIcon icon={faShareNodes} className="mr-2" />
-                Share Article
-              </Button>
-            </div>
+            <BlogInteractionButtons post={post} type="share" />
           </div>
         </header>
 
@@ -203,19 +197,7 @@ const BlogPostPage = async ({
           </Card>
 
           {/* Navigation */}
-          <div className="flex flex-col sm:flex-row gap-4 justify-between">
-            <Link href="/blog">
-              <Button variant="outline" className="w-full sm:w-auto">
-                <FontAwesomeIcon icon={faArrowLeft} className="mr-2" />
-                All Articles
-              </Button>
-            </Link>
-            <Link href="/">
-              <Button className="w-full sm:w-auto">
-                Try TFC Calculator
-              </Button>
-            </Link>
-          </div>
+          <BlogInteractionButtons post={post} />
         </footer>
       </article>
     </div>

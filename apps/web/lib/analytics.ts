@@ -1,6 +1,7 @@
 "use client"
 
 import { track } from "@vercel/analytics"
+import posthog from "posthog-js"
 
 // Define event types for better type safety
 export type AnalyticsEvent =
@@ -32,6 +33,15 @@ export type AnalyticsEvent =
   | "app_store_clicked"
   | "play_store_clicked"
 
+  // Blog interactions
+  | "blog_filter_applied"
+  | "blog_filter_cleared"
+  | "blog_filter_show_more_clicked"
+  | "blog_post_clicked"
+  | "blog_post_shared"
+  | "blog_try_calculator_clicked"
+  | "featured_post_clicked"
+
 export type AnalyticsProperties = {
   // Child properties
   child_age?: number
@@ -57,6 +67,16 @@ export type AnalyticsProperties = {
   // General properties
   page?: string
   button_location?: string
+
+  // Blog properties
+  blog_tag?: string
+  blog_post_title?: string
+  blog_post_slug?: string
+  blog_author?: string
+  blog_reading_time?: string
+  is_featured_post?: boolean
+  filtered_posts_count?: number
+  share_method?: string
 }
 
 /**
@@ -70,6 +90,11 @@ export function trackEvent(
   try {
     // Track with Vercel Analytics
     track(event, properties || {})
+
+    // Track with PostHog
+    if (typeof window !== "undefined" && posthog.__loaded) {
+      posthog.capture(event, properties || {})
+    }
 
     // Optional: Add console logging in development
     if (process.env.NODE_ENV === "development") {
@@ -114,5 +139,31 @@ export function getPaymentAnalyticsProperties(
     quarterly_limit_remaining: Math.max(0, quarterlyLimit - quarterlyReceived),
     payment_description_provided: !!description && description.trim().length > 0,
     is_over_limit: quarterlyReceived >= quarterlyLimit
+  }
+}
+
+/**
+ * Helper function to calculate analytics properties for blog interactions
+ */
+export function getBlogAnalyticsProperties(
+  post?: {
+    meta: {
+      title: string
+      slug: string
+      author: { name: string }
+      featured?: boolean
+    }
+    readingTime?: string
+  }
+) {
+  if (!post) return {}
+
+  return {
+    blog_post_title: post.meta.title,
+    blog_post_slug: post.meta.slug,
+    blog_author: post.meta.author.name,
+    blog_reading_time: post.readingTime,
+    is_featured_post: !!post.meta.featured,
+    page: '/blog'
   }
 }
