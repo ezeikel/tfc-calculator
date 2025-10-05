@@ -3,13 +3,12 @@
 import { useState, useEffect } from "react"
 import Image from "next/image"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
-import { faCalculator, faInfoCircle, faBaby, faPlus } from "@fortawesome/pro-solid-svg-icons"
+import { faInfoCircle, faBaby, faPlus } from "@fortawesome/pro-solid-svg-icons"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ChildCalculator } from "@/components/ChildCalculator"
 import { AddChildDialog } from "@/components/AddChildDialog"
-import { ThemeToggle } from "@/components/ThemeToggle"
 import { useTheme } from "@/hooks/useTheme"
 import { trackEvent, getChildAnalyticsProperties } from "@/lib/analytics"
 import type { Payment } from "@/components/PaymentConfirmationDialog"
@@ -160,23 +159,8 @@ const TaxFreeChildcareCalculator = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background">
       <div className="container mx-auto px-4 py-6 max-w-4xl">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-primary/10 rounded-lg">
-              <FontAwesomeIcon icon={faCalculator} size="lg" className="text-primary" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-bold text-balance font-public-sans">TFC Calculator</h1>
-              <p className="text-muted-foreground text-sm font-source-sans">
-                Calculate government contributions for your childcare costs
-              </p>
-            </div>
-          </div>
-          <ThemeToggle />
-        </div>
 
         {/* Description */}
         <Card className="mb-8">
@@ -301,9 +285,6 @@ const TaxFreeChildcareCalculator = () => {
             </div>
           </div>
 
-          <p className="text-xs text-muted-foreground">
-            This calculator is for guidance only. Always check with HMRC for official information.
-          </p>
         </div>
 
         <AddChildDialog open={isAddChildOpen} onOpenChange={setIsAddChildOpen} onAddChild={addChild} />

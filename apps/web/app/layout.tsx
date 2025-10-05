@@ -5,6 +5,8 @@ import "./globals.css"
 import { Suspense } from "react"
 import { config } from "@fortawesome/fontawesome-svg-core"
 import { Analytics } from "@vercel/analytics/next"
+import Header from "@/components/Header"
+import Footer from "@/components/Footer"
 
 config.autoAddCss = false;
 
@@ -67,7 +69,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`font-source-sans ${publicSans.variable} ${sourceSans.variable}`}>
-        <Suspense>{children}</Suspense>
+        <div className="min-h-screen flex flex-col">
+          <Header />
+          <main className="flex-1">
+            <Suspense>{children}</Suspense>
+          </main>
+          <Footer />
+        </div>
         <Analytics />
       </body>
     </html>

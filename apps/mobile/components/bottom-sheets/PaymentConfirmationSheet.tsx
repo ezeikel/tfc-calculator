@@ -11,7 +11,7 @@ import {
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
 import type { Child, Payment } from '@/types';
-import { useAnalytics, getChildAnalyticsProperties } from '@/lib/analytics';
+import { useAnalytics, getChildAnalyticsProperties, getPaymentAnalyticsProperties } from '@/lib/analytics';
 
 interface PaymentConfirmationSheetProps {
   child: Child;

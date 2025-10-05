@@ -16,6 +16,15 @@ const nextConfig = {
   },
   // This is required to support PostHog trailing slash API requests
   skipTrailingSlashRedirect: true,
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**.public.blob.vercel-storage.com',
+        pathname: '**',
+      },
+    ],
+  },
 };
 
 export default withSentryConfig(nextConfig, {
