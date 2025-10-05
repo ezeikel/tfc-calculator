@@ -13,7 +13,8 @@ import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { useForm } from '@tanstack/react-form';
-import type { Child } from '../app/(tabs)/index';
+import type { Child } from '@/types';
+import { useAnalytics } from '../../lib/analytics';
 
 interface AddChildModalProps {
   onAddChild: (child: Omit<Child, 'id'>) => void;
@@ -30,10 +31,17 @@ export const AddChildModal = forwardRef<AddChildModalRef, AddChildModalProps>(fu
   const bottomSheetModalRef = useRef<BottomSheetModal>(null);
   const [showDateOfBirthPicker, setShowDateOfBirthPicker] = useState(false);
   const [showReconfirmationDatePicker, setShowReconfirmationDatePicker] = useState(false);
+  const { trackEvent } = useAnalytics();
 
   useImperativeHandle(ref, () => ({
-    present: () => bottomSheetModalRef.current?.present(),
-    dismiss: () => bottomSheetModalRef.current?.dismiss(),
+    present: () => {
+      trackEvent('add_child_dialog_opened');
+      bottomSheetModalRef.current?.present();
+    },
+    dismiss: () => {
+      trackEvent('add_child_dialog_cancelled');
+      bottomSheetModalRef.current?.dismiss();
+    },
   }));
 
   const form = useForm({
@@ -54,6 +62,11 @@ export const AddChildModal = forwardRef<AddChildModalRef, AddChildModalProps>(fu
         reconfirmationDate: value.reconfirmationDate.toISOString().split('T')[0],
         quarterlyTopUpReceived: 0,
       };
+
+      trackEvent('child_added', {
+        has_child_name: !!child.name,
+        child_age: child.dateOfBirth ? Math.floor((new Date().getTime() - new Date(child.dateOfBirth).getTime()) / (365.25 * 24 * 60 * 60 * 1000)) : undefined
+      });
 
       onAddChild(child);
       form.reset();

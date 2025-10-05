@@ -44,5 +44,8 @@ yarn-error.*
 
 *.apk
 *.ipa
+*.aab
 
 .cursor/
+
+google-service-account.json

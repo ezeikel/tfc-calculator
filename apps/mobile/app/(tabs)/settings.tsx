@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,9 +15,21 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Application from 'expo-application';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
+import { AdBanner } from '../../components/AdBanner';
+import { adService } from '../../services/AdService';
+import { purchaseService } from '../../services/PurchaseService';
 
 export default function SettingsScreen() {
   const [isClearing, setIsClearing] = useState(false);
+  const [isAdFree, setIsAdFree] = useState(false);
+
+  useEffect(() => {
+    const checkAdFreeStatus = async () => {
+      const adFree = await purchaseService.isAdFree();
+      setIsAdFree(adFree);
+    };
+    checkAdFreeStatus();
+  }, []);
 
   const iconMap = {
     download: faDownload,
@@ -54,6 +66,9 @@ export default function SettingsScreen() {
   };
 
   const exportData = async () => {
+    // Show interstitial ad before export
+    await adService.showAd();
+
     try {
       const children = await AsyncStorage.getItem('tfc-children');
       const payments = await AsyncStorage.getItem('tfc-payments');
@@ -102,6 +117,38 @@ export default function SettingsScreen() {
     Linking.openURL('https://www.gov.uk/tax-free-childcare');
   };
 
+  const handleRemoveAds = async () => {
+    Alert.alert(
+      'Remove Ads',
+      'Purchase the ad-free version for £2.99?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Purchase',
+          onPress: async () => {
+            const success = await purchaseService.purchaseAdRemoval();
+            if (success) {
+              setIsAdFree(true);
+              Alert.alert('Success', 'Ads have been removed!');
+            } else {
+              Alert.alert('Error', 'Purchase failed. Please try again.');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleRestorePurchases = async () => {
+    const success = await purchaseService.restorePurchases();
+    if (success) {
+      setIsAdFree(true);
+      Alert.alert('Success', 'Your purchases have been restored!');
+    } else {
+      Alert.alert('No Purchases', 'No previous purchases found to restore.');
+    }
+  };
+
   const SettingItem = ({
     icon,
     title,
@@ -145,7 +192,7 @@ export default function SettingsScreen() {
     <SafeAreaView className="flex-1 bg-gray-50" edges={['left', 'right']}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <View className="p-4">
-          {/* App Info */}
+          <AdBanner placement="settings" />
           <View className="bg-white rounded-xl p-6 mb-6 items-center shadow-sm border border-gray-100">
             <View className="bg-blue-100 rounded-full p-4 mb-4">
               <FontAwesomeIcon icon={faCalculator} size={32} color="#3b82f6" />
@@ -158,7 +205,29 @@ export default function SettingsScreen() {
             </Text>
           </View>
 
-          {/* Data Management */}
+          {!isAdFree && (
+            <View className="mb-6">
+              <Text className="text-lg font-semibold mb-4 px-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+                Premium
+              </Text>
+
+              <SettingItem
+                icon="trash"
+                title="Remove Ads"
+                subtitle="Get the ad-free experience for £2.99"
+                textColor="text-blue-600"
+                onPress={handleRemoveAds}
+              />
+
+              <SettingItem
+                icon="download"
+                title="Restore Purchases"
+                subtitle="Restore your previous ad-free purchase"
+                onPress={handleRestorePurchases}
+              />
+            </View>
+          )}
+
           <View className="mb-6">
             <Text className="text-lg font-semibold mb-4 px-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
               Data Management
@@ -181,7 +250,6 @@ export default function SettingsScreen() {
             />
           </View>
 
-          {/* Information */}
           <View className="mb-6">
             <Text className="text-lg font-semibold mb-4 px-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
               Information
@@ -195,7 +263,6 @@ export default function SettingsScreen() {
             />
           </View>
 
-          {/* About */}
           <View className="bg-amber-50 rounded-xl p-4 border border-amber-200">
             <View className="flex-row items-start">
               <FontAwesomeIcon icon={faExclamationTriangle} size={16} color="#f59e0b" />
@@ -210,7 +277,6 @@ export default function SettingsScreen() {
             </View>
           </View>
 
-          {/* Version Info */}
           <View className="mt-8 items-center">
             <Text className="text-xs text-gray-500" style={{ fontFamily: 'PublicSans_400Regular' }}>
               Version {Application.nativeApplicationVersion}

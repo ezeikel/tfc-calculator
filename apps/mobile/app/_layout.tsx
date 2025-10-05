@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { useFonts } from 'expo-font';
+import Constants, { ExecutionEnvironment } from "expo-constants";
 import '@/global.css';
 import {
   PublicSans_400Regular,
@@ -7,14 +8,39 @@ import {
   PublicSans_700Bold,
 } from '@expo-google-fonts/public-sans';
 import * as SplashScreen from 'expo-splash-screen';
-import { Stack } from 'expo-router';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { Stack, useGlobalSearchParams, usePathname } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
+import { purchaseService } from '../services/PurchaseService';
+import * as Sentry from '@sentry/react-native';
+import Providers from '@/providers';
+import { usePostHog } from 'posthog-react-native';
+
+const SENTRY_DSN = process.env.SENTRY_DSN || process.env.EXPO_PUBLIC_SENTRY_DSN;
+
+Sentry.init({
+  dsn: SENTRY_DSN,
+  sendDefaultPii: true,
+  tracesSampleRate: 1.0,
+  enableLogs: true,
+  replaysSessionSampleRate: 0.1,
+  replaysOnErrorSampleRate: 1,
+  integrations: [Sentry.mobileReplayIntegration(), Sentry.feedbackIntegration()],
+  enableNativeFramesTracking: Constants.executionEnvironment === ExecutionEnvironment.StoreClient,
+});
 
 SplashScreen.preventAutoHideAsync();
 
-export default function RootLayout() {
+const RootLayout = () => {
+  const pathname = usePathname();
+  const params = useGlobalSearchParams();
+  const posthog = usePostHog();
+
+  useEffect(() => {
+    if (posthog) {
+      posthog.screen(pathname, params);
+    }
+  }, [pathname, params, posthog]);
+
   const [loaded, error] = useFonts({
     PublicSans_400Regular,
     PublicSans_600SemiBold,
@@ -27,18 +53,23 @@ export default function RootLayout() {
     }
   }, [loaded, error]);
 
+  useEffect(() => {
+    // Initialize RevenueCat when app starts
+    purchaseService.initialize();
+  }, []);
+
   if (!loaded && !error) {
     return null;
   }
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <BottomSheetModalProvider>
-        <StatusBar style="dark" />
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-      </BottomSheetModalProvider>
-    </GestureHandlerRootView>
+    <Providers>
+      <StatusBar style="dark" />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+    </Providers>
   );
 }
+
+export default Sentry.wrap(RootLayout);

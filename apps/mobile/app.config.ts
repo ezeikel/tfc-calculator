@@ -7,6 +7,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     slug: "tfc-calculator",
     owner: "chewybytes",
     version: pkg.version,
+    description: "Calculate government contributions for your Tax-Free Childcare account. Track your children and payments with ease.",
     orientation: "portrait",
     icon: "./assets/images/icon.png",
     scheme: "tfccalculator",
@@ -16,7 +17,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         supportsTablet: true,
         bundleIdentifier: "com.chewybytes.tfccalculator",
         infoPlist: {
-          ITSAppUsesNonExemptEncryption: false
+          ITSAppUsesNonExemptEncryption: false,
+          NSUserTrackingUsageDescription: "We use your device identifier to show relevant ads."
       }
     },
     android: {
@@ -44,6 +46,21 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     ],
       "expo-font",
       "expo-dev-client",
+      [
+        "react-native-google-mobile-ads",
+        {
+          androidAppId: process.env.EXPO_PUBLIC_ADMOB_ANDROID_APP_ID,
+          iosAppId: process.env.EXPO_PUBLIC_ADMOB_IOS_APP_ID,
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "project": "tfc-calculator-app",
+          "organization": "chewybytes"
+        }
+      ]
     ],
     runtimeVersion: {
       policy: "appVersion",

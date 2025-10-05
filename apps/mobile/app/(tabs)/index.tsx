@@ -14,24 +14,9 @@ import { CalculatorCard } from '../../components/CalculatorCard';
 import { AddChildModal, AddChildModalRef } from '../../components/bottom-sheets/AddChildModal';
 import { PaymentConfirmationModal, PaymentConfirmationModalRef } from '../../components/bottom-sheets/PaymentConfirmationModal';
 import { PaymentHistoryModal, PaymentHistoryModalRef } from '../../components/bottom-sheets/PaymentHistoryModal';
+import { AdBanner } from '../../components/AdBanner';
+import type { Child, Payment } from '@/types';
 
-export type Child = {
-  id: string;
-  name?: string;
-  dateOfBirth: string;
-  reconfirmationDate: string;
-  quarterlyTopUpReceived: number;
-};
-
-export type Payment = {
-  id: string;
-  childId: string;
-  amount: number;
-  parentPaid: number;
-  governmentTopUp: number;
-  date: string;
-  description?: string;
-};
 
 export default function CalculatorScreen() {
   const [children, setChildren] = useState<Child[]>([]);
@@ -177,6 +162,7 @@ export default function CalculatorScreen() {
   return (
     <SafeAreaView className="flex-1 bg-gray-50" edges={['left', 'right']}>
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+        <AdBanner placement="calculator" />
         <View className="p-4 flex-1 min-h-screen">
           <View className="bg-white rounded-xl p-4 mb-4 shadow-sm border border-gray-100">
             <View className="flex-row items-start">

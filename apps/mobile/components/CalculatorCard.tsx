@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,8 @@ import {
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faEdit, faCalendar, faHistory, faTrash, faExclamationTriangle, faCalculator, faFileAlt } from '@fortawesome/free-solid-svg-icons';
-import type { Child, Payment } from '../app/(tabs)/index';
+import type { Child, Payment } from '@/types';
+import { useAnalytics, getChildAnalyticsProperties, getPaymentAnalyticsProperties } from '@/lib/analytics';
 
 interface CalculatorCardProps {
   child: Child;
@@ -33,6 +34,7 @@ export const CalculatorCard: React.FC<CalculatorCardProps> = ({
   const [childcareCost, setChildcareCost] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [editName, setEditName] = useState(child.name || '');
+  const { trackEvent } = useAnalytics();
 
   const getChildAge = () => {
     const today = new Date();
@@ -92,19 +94,72 @@ export const CalculatorCard: React.FC<CalculatorCardProps> = ({
   const daysRemaining = getDaysRemainingInQuarter();
   const progressPercentage = (calculation.confirmedTopUpUsed / 500) * 100;
 
+  // Track calculation events
+  useEffect(() => {
+    if (childcareCost && parseFloat(childcareCost) > 0) {
+      trackEvent('childcare_cost_calculated', {
+        childcare_cost: parseFloat(childcareCost),
+        calculated_parent_payment: calculation.userPayment,
+        calculated_government_topup: calculation.governmentTopUp,
+        is_over_limit: calculation.isAtLimit,
+        ...getChildAnalyticsProperties([child])
+      });
+
+      if (calculation.governmentTopUp > 0) {
+        trackEvent('government_topup_calculated', {
+          government_topup: calculation.governmentTopUp,
+          quarterly_limit_remaining: calculation.remainingThisQuarter,
+          ...getChildAnalyticsProperties([child])
+        });
+      }
+
+      if (calculation.isAtLimit) {
+        trackEvent('quarterly_limit_reached', {
+          total_quarterly_received: calculation.confirmedTopUpUsed,
+          ...getChildAnalyticsProperties([child])
+        });
+      } else if (calculation.exceedsLimit) {
+        trackEvent('quarterly_limit_warning', {
+          total_quarterly_received: calculation.confirmedTopUpUsed,
+          quarterly_limit_remaining: calculation.remainingThisQuarter,
+          ...getChildAnalyticsProperties([child])
+        });
+      }
+    }
+  }, [childcareCost, calculation.userPayment, calculation.governmentTopUp, calculation.isAtLimit, calculation.exceedsLimit]);
+
   const handleNameEdit = () => {
     onUpdateChild({ name: editName.trim() || undefined });
     setIsEditing(false);
+    trackEvent('child_name_updated', {
+      ...getChildAnalyticsProperties([child])
+    });
   };
 
   const handleOpenPaymentSheet = () => {
     // Only open if there's a valid calculation with values > 0
     if (calculation.governmentTopUp > 0 && calculation.userPayment >= 0) {
+      trackEvent('payment_dialog_opened', {
+        ...getPaymentAnalyticsProperties(
+          calculation.userPayment,
+          calculation.governmentTopUp,
+          calculation.confirmedTopUpUsed
+        ),
+        childcare_cost: parseFloat(childcareCost) || 0,
+        calculated_parent_payment: calculation.userPayment,
+        calculated_government_topup: calculation.governmentTopUp,
+        is_over_limit: calculation.isAtLimit,
+        ...getChildAnalyticsProperties([child])
+      });
       onOpenPaymentSheet(child, calculation.userPayment, calculation.governmentTopUp);
     }
   };
 
   const handleOpenHistorySheet = () => {
+    trackEvent('payment_history_viewed', {
+      ...getChildAnalyticsProperties([child]),
+      payment_count: payments.length
+    });
     onOpenHistorySheet(child);
   };
 
@@ -171,7 +226,10 @@ export const CalculatorCard: React.FC<CalculatorCardProps> = ({
               </Pressable>
             )}
             <Pressable
-              onPress={onRemoveChild}
+              onPress={() => {
+                trackEvent('child_removed', getChildAnalyticsProperties([child]));
+                onRemoveChild();
+              }}
               className="bg-red-100 px-3 py-2 rounded-lg"
             >
               <FontAwesomeIcon icon={faTrash} size={14} color="#dc2626" />

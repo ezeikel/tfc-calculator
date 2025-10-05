@@ -10,7 +10,8 @@ import {
 } from 'react-native';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCheck } from '@fortawesome/free-solid-svg-icons';
-import type { Child, Payment } from '../app/(tabs)/index';
+import type { Child, Payment } from '@/types';
+import { useAnalytics, getChildAnalyticsProperties } from '@/lib/analytics';
 
 interface PaymentConfirmationSheetProps {
   child: Child;
@@ -30,6 +31,7 @@ export const PaymentConfirmationSheet: React.FC<PaymentConfirmationSheetProps> =
   const [amount, setAmount] = useState(suggestedAmount.toFixed(2));
   const [topUp, setTopUp] = useState(suggestedTopUp.toFixed(2));
   const [description, setDescription] = useState('');
+  const { trackEvent } = useAnalytics();
 
   const handleConfirm = () => {
     const paymentAmount = parseFloat(amount) || 0;
@@ -44,6 +46,13 @@ export const PaymentConfirmationSheet: React.FC<PaymentConfirmationSheetProps> =
       date: new Date().toISOString(),
       description: description.trim() || undefined,
     };
+
+    trackEvent('payment_added', {
+      payment_amount: paymentAmount,
+      government_topup: topUpAmount,
+      payment_description_provided: !!description.trim(),
+      ...getChildAnalyticsProperties([child])
+    });
 
     onConfirm(payment);
   };
@@ -145,7 +154,14 @@ export const PaymentConfirmationSheet: React.FC<PaymentConfirmationSheetProps> =
         {/* Action Buttons */}
         <View className="flex-row gap-3 mb-8 px-4" >
           <Pressable
-            onPress={onCancel}
+            onPress={() => {
+              trackEvent('payment_dialog_cancelled', {
+                payment_amount: parseFloat(amount) || 0,
+                government_topup: parseFloat(topUp) || 0,
+                ...getChildAnalyticsProperties([child])
+              });
+              onCancel();
+            }}
             className="flex-1 bg-gray-200 rounded-lg p-4"
           >
             <Text className="text-center font-semibold text-gray-700" style={{ fontFamily: 'PublicSans_600SemiBold' }}>

@@ -1,7 +1,7 @@
 import React, { useRef, forwardRef, useImperativeHandle, useMemo } from 'react';
 import { BottomSheetModal, BottomSheetView, BottomSheetBackdrop } from '@gorhom/bottom-sheet';
 import { PaymentConfirmationSheet } from './PaymentConfirmationSheet';
-import type { Child, Payment } from '../../app/(tabs)/index';
+import type { Child, Payment } from '@/types';
 
 interface PaymentConfirmationModalProps {
   child: Child | null;
