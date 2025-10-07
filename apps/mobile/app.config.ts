@@ -17,8 +17,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         supportsTablet: true,
         bundleIdentifier: "com.chewybytes.tfccalculator",
         infoPlist: {
-          ITSAppUsesNonExemptEncryption: false,
-          NSUserTrackingUsageDescription: "We use your device identifier to show relevant ads."
+          ITSAppUsesNonExemptEncryption: false
       }
     },
     android: {
