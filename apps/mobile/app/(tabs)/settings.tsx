@@ -7,6 +7,7 @@ import {
   Alert,
   Linking,
 } from 'react-native';
+import RevenueCatUI, { PAYWALL_RESULT } from 'react-native-purchases-ui';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { FontAwesomeIcon } from '@fortawesome/react-native-fontawesome';
 import { faCalculator, faExclamationTriangle, faChevronRight, faDownload, faTrash, faGlobe } from '@fortawesome/free-solid-svg-icons';
@@ -21,14 +22,14 @@ import { purchaseService } from '../../services/PurchaseService';
 
 export default function SettingsScreen() {
   const [isClearing, setIsClearing] = useState(false);
-  const [isAdFree, setIsAdFree] = useState(false);
+  const [isPremium, setIsPremium] = useState(false);
 
   useEffect(() => {
-    const checkAdFreeStatus = async () => {
-      const adFree = await purchaseService.isAdFree();
-      setIsAdFree(adFree);
+    const checkPremiumStatus = async () => {
+      const premium = await purchaseService.isPremium();
+      setIsPremium(premium);
     };
-    checkAdFreeStatus();
+    checkPremiumStatus();
   }, []);
 
   const iconMap = {
@@ -117,35 +118,38 @@ export default function SettingsScreen() {
     Linking.openURL('https://www.gov.uk/tax-free-childcare');
   };
 
-  const handleRemoveAds = async () => {
-    Alert.alert(
-      'Remove Ads',
-      'Purchase the ad-free version for £2.99?',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Purchase',
-          onPress: async () => {
-            const success = await purchaseService.purchaseAdRemoval();
-            if (success) {
-              setIsAdFree(true);
-              Alert.alert('Success', 'Ads have been removed!');
-            } else {
-              Alert.alert('Error', 'Purchase failed. Please try again.');
-            }
-          },
-        },
-      ]
-    );
+  const showPaywall = async () => {
+    try {
+      const paywallResult = await RevenueCatUI.presentPaywall();
+
+      switch (paywallResult) {
+        case PAYWALL_RESULT.PURCHASED:
+          setIsPremium(true);
+          Alert.alert('Success', 'Welcome to Premium!');
+          break;
+        case PAYWALL_RESULT.CANCELLED:
+          console.log('User cancelled paywall');
+          break;
+        case PAYWALL_RESULT.NOT_PRESENTED:
+          Alert.alert('Error', 'Unable to show subscription options. Please try again.');
+          break;
+        case PAYWALL_RESULT.ERROR:
+          Alert.alert('Error', 'Something went wrong. Please try again.');
+          break;
+      }
+    } catch (error) {
+      console.log('Paywall error:', error);
+      Alert.alert('Error', 'Unable to show subscription options. Please try again.');
+    }
   };
 
   const handleRestorePurchases = async () => {
     const success = await purchaseService.restorePurchases();
     if (success) {
-      setIsAdFree(true);
-      Alert.alert('Success', 'Your purchases have been restored!');
+      setIsPremium(true);
+      Alert.alert('Success', 'Your subscription has been restored!');
     } else {
-      Alert.alert('No Purchases', 'No previous purchases found to restore.');
+      Alert.alert('No Purchases', 'No previous subscriptions found to restore.');
     }
   };
 
@@ -205,24 +209,24 @@ export default function SettingsScreen() {
             </Text>
           </View>
 
-          {!isAdFree && (
+          {!isPremium && (
             <View className="mb-6">
               <Text className="text-lg font-semibold mb-4 px-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
                 Premium
               </Text>
 
               <SettingItem
-                icon="trash"
-                title="Remove Ads"
-                subtitle="Get the ad-free experience for £2.99"
-                textColor="text-blue-600"
-                onPress={handleRemoveAds}
+                icon="calculator"
+                title="Go Premium ⭐"
+                subtitle="Choose monthly or yearly - best value!"
+                textColor="text-green-600"
+                onPress={showPaywall}
               />
 
               <SettingItem
                 icon="download"
-                title="Restore Purchases"
-                subtitle="Restore your previous ad-free purchase"
+                title="Restore Subscription"
+                subtitle="Restore your previous subscription"
                 onPress={handleRestorePurchases}
               />
             </View>

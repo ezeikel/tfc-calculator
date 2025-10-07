@@ -1,8 +1,7 @@
 import Purchases, { CustomerInfo, PurchasesOffering } from 'react-native-purchases';
 import { Platform } from 'react-native';
 
-const REMOVE_ADS_ENTITLEMENT = 'ad_free';
-const REMOVE_ADS_PRODUCT_ID = 'remove_ads';
+const PREMIUM_ENTITLEMENT = 'premium';
 
 class PurchaseService {
   private isInitialized = false;
@@ -29,16 +28,16 @@ class PurchaseService {
     }
   }
 
-  async isAdFree(): Promise<boolean> {
+  async isPremium(): Promise<boolean> {
     try {
       if (!this.isInitialized) {
         await this.initialize();
       }
 
       const customerInfo = await Purchases.getCustomerInfo();
-      return customerInfo.entitlements.active[REMOVE_ADS_ENTITLEMENT] !== undefined;
+      return customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
     } catch (error) {
-      console.log('Failed to check ad-free status:', error);
+      console.log('Failed to check premium status:', error);
       return false;
     }
   }
@@ -57,30 +56,38 @@ class PurchaseService {
     }
   }
 
-  async purchaseAdRemoval(): Promise<boolean> {
+  async purchasePackage(packageIdentifier: string): Promise<boolean> {
     try {
       if (!this.isInitialized) {
         await this.initialize();
       }
 
       const offerings = await this.getOfferings();
-      const adRemovalPackage = offerings?.availablePackages.find(
-        pkg => pkg.product.identifier === REMOVE_ADS_PRODUCT_ID
+      const packageToPurchase = offerings?.availablePackages.find(
+        pkg => pkg.identifier === packageIdentifier
       );
 
-      if (!adRemovalPackage) {
-        console.log('Ad removal package not found');
+      if (!packageToPurchase) {
+        console.log(`Package ${packageIdentifier} not found`);
         return false;
       }
 
-      const { customerInfo } = await Purchases.purchasePackage(adRemovalPackage);
-      const hasAdFree = customerInfo.entitlements.active[REMOVE_ADS_ENTITLEMENT] !== undefined;
+      const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
+      const hasPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
 
-      return hasAdFree;
+      return hasPremium;
     } catch (error) {
       console.log('Purchase failed:', error);
       return false;
     }
+  }
+
+  async purchaseMonthly(): Promise<boolean> {
+    return this.purchasePackage('monthly');
+  }
+
+  async purchaseYearly(): Promise<boolean> {
+    return this.purchasePackage('yearly');
   }
 
   async restorePurchases(): Promise<boolean> {
@@ -90,9 +97,9 @@ class PurchaseService {
       }
 
       const customerInfo = await Purchases.restorePurchases();
-      const hasAdFree = customerInfo.entitlements.active[REMOVE_ADS_ENTITLEMENT] !== undefined;
+      const hasPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
 
-      return hasAdFree;
+      return hasPremium;
     } catch (error) {
       console.log('Failed to restore purchases:', error);
       return false;
