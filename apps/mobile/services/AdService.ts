@@ -41,8 +41,8 @@ class AdService {
   }
 
   async showAd(): Promise<boolean> {
-    const isAdFree = await purchaseService.isAdFree();
-    if (isAdFree) {
+    const isPremium = await purchaseService.isPremium();
+    if (isPremium) {
       return false;
     }
 
