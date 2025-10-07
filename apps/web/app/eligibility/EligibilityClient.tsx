@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { trackEvent } from "@/lib/analytics"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faCheckCircle, faTimesCircle, faInfoCircle, faCalculator, faArrowRight } from "@fortawesome/pro-solid-svg-icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -21,7 +22,7 @@ type EligibilityScenario = {
 const eligibilityScenarios: EligibilityScenario[] = [
   {
     title: "Dual-Income Family",
-    income: "£25,000 each (£50,000 total)",
+    income: "£45,000 each (£90,000 total)",
     children: "2 children (aged 3 and 5)",
     employment: "Both parents employed",
     result: "eligible",
@@ -44,7 +45,15 @@ const eligibilityScenarios: EligibilityScenario[] = [
     explanation: "Self-employed income counts if you expect to earn over £183 per week on average."
   },
   {
-    title: "High Earner",
+    title: "High-Earning Couple",
+    income: "£95,000 each (£190,000 total)",
+    children: "1 child (aged 5)",
+    employment: "Both parents employed",
+    result: "eligible",
+    explanation: "Both parents earn under £100,000 individually, so they qualify despite high household income."
+  },
+  {
+    title: "Single High Earner",
     income: "£120,000 annually",
     children: "2 children (aged 6 and 9)",
     employment: "One parent employed",
@@ -63,6 +72,13 @@ const eligibilityScenarios: EligibilityScenario[] = [
 
 export const EligibilityClient = () => {
   const [selectedScenario, setSelectedScenario] = useState<number | null>(null)
+
+  // Track page view on mount
+  useEffect(() => {
+    trackEvent("eligibility_page_viewed", {
+      page: "/eligibility"
+    })
+  }, [])
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -133,7 +149,14 @@ export const EligibilityClient = () => {
 
           <div className="text-center">
             <Link href="/">
-              <Button size="lg" className="text-white">
+              <Button
+                size="lg"
+                className="text-white"
+                onClick={() => trackEvent("eligibility_calculator_clicked", {
+                  button_location: "main_cta",
+                  page: "/eligibility"
+                })}
+              >
                 <FontAwesomeIcon icon={faCalculator} className="mr-2" />
                 Calculate Your Savings Now
                 <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
@@ -203,7 +226,19 @@ export const EligibilityClient = () => {
                     ? "border-primary bg-primary/5"
                     : "hover:border-muted-foreground/50"
                 }`}
-                onClick={() => setSelectedScenario(selectedScenario === index ? null : index)}
+                onClick={() => {
+                  const newSelection = selectedScenario === index ? null : index
+                  setSelectedScenario(newSelection)
+
+                  if (newSelection !== null) {
+                    trackEvent("eligibility_scenario_clicked", {
+                      scenario_name: scenario.title,
+                      scenario_result: scenario.result,
+                      scenario_index: index,
+                      page: "/eligibility"
+                    })
+                  }
+                }}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-3">
@@ -273,6 +308,12 @@ export const EligibilityClient = () => {
                   <td className="p-3">£9,518 each</td>
                   <td className="p-3">£99,999 each</td>
                   <td className="p-3">£183 - £1,923 each</td>
+                </tr>
+                <tr className="border-b bg-green-50">
+                  <td className="p-3 font-medium">Couple earning maximum</td>
+                  <td className="p-3">£9,518 each</td>
+                  <td className="p-3 font-semibold text-green-700">£199,998 total</td>
+                  <td className="p-3">Up to £1,923 each</td>
                 </tr>
                 <tr className="border-b">
                   <td className="p-3">Disabled child support</td>

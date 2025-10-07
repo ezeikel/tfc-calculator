@@ -22,7 +22,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 export const metadata: Metadata = {
   title: "Common Tax-Free Childcare Mistakes & Tips 2025 | TFC Calculator",
   description: "Avoid the top 5 Tax-Free Childcare mistakes. Learn how to fix missed reconfirmation, payment problems, and eligibility issues. Expert tips for maximizing your savings.",
-  keywords: "tax free childcare mistakes, TFC problems, missed reconfirmation, payment didn't work, tax-free childcare tips, troubleshooting childcare account"
+  keywords: "tax free childcare mistakes, tax-free childcare problems, missed reconfirmation, payment didn't work, tax-free childcare tips, troubleshooting childcare account"
 }
 
 type Mistake = {

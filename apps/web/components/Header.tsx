@@ -27,7 +27,8 @@ type NavItem = {
   external?: boolean;
 };
 
-const NAV_ITEMS: NavItem[] = [
+// Primary navigation items (always visible on desktop)
+const PRIMARY_NAV_ITEMS: NavItem[] = [
   {
     label: 'Calculator',
     href: '/',
@@ -48,6 +49,11 @@ const NAV_ITEMS: NavItem[] = [
     href: '/faqs',
     icon: faQuestion,
   },
+];
+
+// All navigation items (for mobile menu)
+const NAV_ITEMS: NavItem[] = [
+  ...PRIMARY_NAV_ITEMS,
   {
     label: 'Blog',
     href: '/blog',
@@ -152,33 +158,55 @@ const Header = () => {
                   className="text-primary"
                 />
               </div>
-              <div className="hidden sm:block">
+              <div>
                 <h1 className="text-xl font-bold text-balance font-public-sans">
                   TFC Calculator
                 </h1>
-                <p className="text-xs text-muted-foreground font-source-sans">
+                <p className="text-xs text-muted-foreground font-source-sans hidden sm:block">
                   Tax-Free Childcare Calculator
                 </p>
-              </div>
-              <div className="sm:hidden">
-                <h1 className="text-lg font-bold font-public-sans">TFC</h1>
               </div>
             </Link>
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex items-center gap-1">
-              {NAV_ITEMS.map((item) => (
+            <nav className="hidden lg:flex items-center gap-1">
+              {PRIMARY_NAV_ITEMS.map((item) => (
                 <div key={item.href}>{renderNavLink(item)}</div>
               ))}
+
+              {/* Blog and About links for larger screens */}
+              <Link
+                href="/blog"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActivePath('/blog')
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <FontAwesomeIcon icon={faNewspaper} className="text-sm" />
+                Blog
+              </Link>
+
+              <Link
+                href="/about"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                  isActivePath('/about')
+                    ? 'bg-primary/10 text-primary'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <FontAwesomeIcon icon={faInfoCircle} className="text-sm" />
+                About
+              </Link>
             </nav>
 
             {/* Desktop Actions */}
-            <div className="hidden md:flex items-center gap-2">
+            <div className="hidden lg:flex items-center gap-2">
               <ThemeToggle />
             </div>
 
             {/* Mobile Actions */}
-            <div className="flex md:hidden items-center gap-2">
+            <div className="flex lg:hidden items-center gap-2">
               <ThemeToggle />
               <Button
                 variant="ghost"
@@ -198,7 +226,7 @@ const Header = () => {
 
       {/* Mobile Menu Overlay */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 md:hidden">
+        <div className="fixed inset-0 z-40 lg:hidden">
           {/* Backdrop */}
           <div
             className="absolute inset-0 bg-background/80 backdrop-blur-sm"

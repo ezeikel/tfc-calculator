@@ -42,6 +42,40 @@ export type AnalyticsEvent =
   | "blog_try_calculator_clicked"
   | "featured_post_clicked"
 
+  // FAQ interactions
+  | "faq_category_selected"
+  | "faq_question_opened"
+  | "faq_question_closed"
+  | "faq_page_viewed"
+  | "faq_help_link_clicked"
+
+  // Eligibility interactions
+  | "eligibility_page_viewed"
+  | "eligibility_scenario_clicked"
+  | "eligibility_apply_clicked"
+  | "eligibility_calculator_clicked"
+
+  // How It Works interactions
+  | "how_it_works_page_viewed"
+  | "how_it_works_calculator_clicked"
+  | "how_it_works_eligibility_clicked"
+
+  // Examples page interactions
+  | "examples_page_viewed"
+  | "examples_scenario_viewed"
+  | "examples_calculator_clicked"
+
+  // Mistakes page interactions
+  | "mistakes_page_viewed"
+  | "mistakes_prevention_checklist_viewed"
+  | "mistakes_calculator_clicked"
+
+  // Compare page interactions
+  | "compare_page_viewed"
+  | "compare_scheme_selected"
+  | "compare_scheme_deselected"
+  | "compare_calculator_clicked"
+
 export type AnalyticsProperties = {
   // Child properties
   child_age?: number
@@ -77,6 +111,26 @@ export type AnalyticsProperties = {
   is_featured_post?: boolean
   filtered_posts_count?: number
   share_method?: string
+
+  // FAQ properties
+  faq_category?: string
+  faq_question?: string
+  faq_question_index?: number
+  help_link_type?: string
+
+  // Eligibility properties
+  scenario_name?: string
+  scenario_result?: "eligible" | "not-eligible"
+  scenario_index?: number
+
+  // Examples properties
+  example_scenario?: string
+  example_type?: string
+
+  // Compare properties
+  scheme_name?: string
+  schemes_selected?: string[]
+  comparison_action?: string
 }
 
 /**

@@ -19,7 +19,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Progress } from "@/components/ui/progress"
 
 export const metadata: Metadata = {
   title: "How Tax-Free Childcare Works - Complete Guide 2025 | TFC Calculator",

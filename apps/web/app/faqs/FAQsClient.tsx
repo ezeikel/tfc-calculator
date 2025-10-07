@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { trackEvent } from "@/lib/analytics"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import { faChevronDown, faChevronUp, faQuestion, faCalculator, faArrowRight } from "@fortawesome/pro-solid-svg-icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -87,12 +88,38 @@ export const FAQsClient = () => {
     ? faqs
     : faqs.filter(faq => faq.category === selectedCategory)
 
+  // Track page view on mount
+  useEffect(() => {
+    trackEvent("faq_page_viewed", {
+      page: "/faqs"
+    })
+  }, [])
+
   const toggleItem = (index: number) => {
+    const isOpening = !openItems.includes(index)
+    const faq = filteredFAQs[index]
+
     setOpenItems(prev =>
       prev.includes(index)
         ? prev.filter(i => i !== index)
         : [...prev, index]
     )
+
+    // Track FAQ interaction
+    trackEvent(isOpening ? "faq_question_opened" : "faq_question_closed", {
+      faq_question: faq.question,
+      faq_category: faq.category,
+      faq_question_index: index,
+      page: "/faqs"
+    })
+  }
+
+  const handleCategoryChange = (category: string) => {
+    setSelectedCategory(category)
+    trackEvent("faq_category_selected", {
+      faq_category: category,
+      page: "/faqs"
+    })
   }
 
   return (
@@ -116,7 +143,7 @@ export const FAQsClient = () => {
                 key={category}
                 variant={selectedCategory === category ? "default" : "outline"}
                 size="sm"
-                onClick={() => setSelectedCategory(category)}
+                onClick={() => handleCategoryChange(category)}
                 className={selectedCategory === category ? "text-white" : ""}
               >
                 {category}
@@ -186,7 +213,15 @@ export const FAQsClient = () => {
                 See how much the government will add to your childcare costs
               </p>
               <Link href="/">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => trackEvent("faq_help_link_clicked", {
+                    help_link_type: "calculator",
+                    page: "/faqs"
+                  })}
+                >
                   <FontAwesomeIcon icon={faCalculator} className="mr-2" />
                   Use Calculator
                 </Button>
@@ -199,7 +234,15 @@ export const FAQsClient = () => {
                 Find out if you qualify for Tax-Free Childcare
               </p>
               <Link href="/eligibility">
-                <Button variant="outline" size="sm" className="w-full">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full"
+                  onClick={() => trackEvent("faq_help_link_clicked", {
+                    help_link_type: "eligibility",
+                    page: "/faqs"
+                  })}
+                >
                   Check Eligibility
                   <FontAwesomeIcon icon={faArrowRight} className="ml-2" />
                 </Button>

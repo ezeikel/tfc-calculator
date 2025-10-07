@@ -1,7 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
+import { trackEvent } from "@/lib/analytics"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome"
 import {
   faBalanceScale,
@@ -12,8 +13,7 @@ import {
   faArrowRight,
   faMoneyBillWave,
   faUsers,
-  faGraduationCap,
-  faInfoCircle
+  faGraduationCap
 } from "@fortawesome/pro-solid-svg-icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -58,7 +58,7 @@ const schemes: Scheme[] = [
       "Provider must be registered"
     ],
     availability: "Available",
-    bestFor: "Working families earning £25,000-£100,000 annually"
+    bestFor: "Working families earning £25,000-£199,998 annually (up to £99,999 each)"
   },
   {
     name: "Universal Credit (Childcare)",
@@ -142,14 +142,38 @@ const schemes: Scheme[] = [
 export const CompareClient = () => {
   const [selectedSchemes, setSelectedSchemes] = useState<string[]>(["Tax-Free Childcare", "Universal Credit (Childcare)"])
 
+  // Track page view on mount
+  useEffect(() => {
+    trackEvent("compare_page_viewed", {
+      page: "/compare",
+      schemes_selected: selectedSchemes
+    })
+  }, [])
+
   const toggleScheme = (schemeName: string) => {
     setSelectedSchemes(prev => {
-      if (prev.includes(schemeName)) {
-        return prev.filter(name => name !== schemeName)
+      const isRemoving = prev.includes(schemeName)
+      let newSelection: string[]
+
+      if (isRemoving) {
+        newSelection = prev.filter(name => name !== schemeName)
+        trackEvent("compare_scheme_deselected", {
+          scheme_name: schemeName,
+          schemes_selected: newSelection,
+          page: "/compare"
+        })
       } else if (prev.length < 3) {
-        return [...prev, schemeName]
+        newSelection = [...prev, schemeName]
+        trackEvent("compare_scheme_selected", {
+          scheme_name: schemeName,
+          schemes_selected: newSelection,
+          page: "/compare"
+        })
+      } else {
+        newSelection = prev
       }
-      return prev
+
+      return newSelection
     })
   }
 
@@ -372,7 +396,7 @@ export const CompareClient = () => {
               <div>
                 <h4 className="font-semibold mb-3">Choose Tax-Free Childcare if you:</h4>
                 <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li>• Earn between £25,000 - £100,000 annually</li>
+                  <li>• Earn under £100,000 annually (both partners if applicable)</li>
                   <li>• Are not on Universal Credit</li>
                   <li>• Want a simple 20% top-up system</li>
                   <li>• Can manage quarterly reconfirmations</li>
@@ -433,7 +457,15 @@ export const CompareClient = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link href="/">
-                <Button size="lg" className="text-white">
+                <Button
+                  size="lg"
+                  className="text-white"
+                  onClick={() => trackEvent("compare_calculator_clicked", {
+                    button_location: "main_cta",
+                    schemes_selected: selectedSchemes,
+                    page: "/compare"
+                  })}
+                >
                   <FontAwesomeIcon icon={faCalculator} className="mr-2" />
                   Calculate Tax-Free Childcare Savings
                 </Button>

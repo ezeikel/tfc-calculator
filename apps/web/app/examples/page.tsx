@@ -8,7 +8,6 @@ import {
   faUsers,
   faWheelchair,
   faChartLine,
-  faMoneyBillWave,
   faInfoCircle
 } from "@fortawesome/pro-solid-svg-icons"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -19,7 +18,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 export const metadata: Metadata = {
   title: "Tax-Free Childcare Examples - Real Scenarios & Savings 2025 | TFC Calculator",
   description: "See real Tax-Free Childcare examples with actual savings calculations. Examples for one child, two children, disabled child, and different income levels. Calculate your potential savings.",
-  keywords: "tax free childcare examples, childcare savings calculator, how much will I get, working example, TFC scenarios, government top-up examples"
+  keywords: "tax free childcare examples, childcare savings calculator, how much will I get, working example, tax-free childcare scenarios, government top-up examples"
 }
 
 type ExampleScenario = {
