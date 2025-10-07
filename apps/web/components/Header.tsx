@@ -10,6 +10,9 @@ import {
   faEnvelope,
   faBars,
   faPhone,
+  faCheckCircle,
+  faGear,
+  faQuestion,
 } from '@fortawesome/pro-solid-svg-icons';
 import { faClose } from '@fortawesome/pro-regular-svg-icons';
 import { Button } from '@/components/ui/button';
@@ -29,6 +32,21 @@ const NAV_ITEMS: NavItem[] = [
     label: 'Calculator',
     href: '/',
     icon: faCalculator,
+  },
+  {
+    label: 'Eligibility',
+    href: '/eligibility',
+    icon: faCheckCircle,
+  },
+  {
+    label: 'How It Works',
+    href: '/how-it-works',
+    icon: faGear,
+  },
+  {
+    label: 'FAQs',
+    href: '/faqs',
+    icon: faQuestion,
   },
   {
     label: 'Blog',
