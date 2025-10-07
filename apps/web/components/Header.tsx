@@ -9,10 +9,10 @@ import {
   faInfoCircle,
   faEnvelope,
   faBars,
-  faPhone,
   faCheckCircle,
   faGear,
   faQuestion,
+  faMapMarkerAlt,
 } from '@fortawesome/pro-solid-svg-icons';
 import { faClose } from '@fortawesome/pro-regular-svg-icons';
 import { Button } from '@/components/ui/button';
@@ -48,6 +48,11 @@ const PRIMARY_NAV_ITEMS: NavItem[] = [
     label: 'FAQs',
     href: '/faqs',
     icon: faQuestion,
+  },
+  {
+    label: 'Regional Guide',
+    href: '/regional-guide',
+    icon: faMapMarkerAlt,
   },
 ];
 

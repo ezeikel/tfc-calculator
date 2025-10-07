@@ -153,40 +153,76 @@ const ChildCalculator = ({
   return (
     <Card className="relative">
       <CardHeader className="pb-4">
-        <div className="flex items-start justify-between">
-          <div className="flex-1">
-            {isEditing ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  value={editName}
-                  onChange={(e) => setEditName(e.target.value)}
-                  placeholder="Child's name (optional)"
-                  className="text-lg font-semibold h-8"
-                  onBlur={handleNameEdit}
-                  onKeyDown={(e) => e.key === "Enter" && handleNameEdit()}
-                  autoFocus
-                />
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <CardTitle className="text-lg font-public-sans">{child.name || "Unnamed Child"}</CardTitle>
+        <div className="space-y-3">
+          {/* Child Name and Edit Button */}
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              {isEditing ? (
+                <div className="flex items-center gap-2">
+                  <Input
+                    value={editName}
+                    onChange={(e) => setEditName(e.target.value)}
+                    placeholder="Child's name (optional)"
+                    className="text-lg font-semibold h-8"
+                    onBlur={handleNameEdit}
+                    onKeyDown={(e) => e.key === "Enter" && handleNameEdit()}
+                    autoFocus
+                  />
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <CardTitle className="text-lg font-public-sans">{child.name || "Unnamed Child"}</CardTitle>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                    className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                  >
+                    <FontAwesomeIcon icon={faPen} size="xs" />
+                  </Button>
+                </div>
+              )}
+            </div>
+
+            {/* Action Buttons - Always visible on desktop, mobile handles below */}
+            <div className="hidden sm:flex items-center gap-2">
+              {childPayments.length > 0 && (
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
-                  onClick={() => setIsEditing(true)}
-                  className="h-6 w-6 p-0 opacity-60 hover:opacity-100"
+                  onClick={() => {
+                    setShowPaymentHistory(!showPaymentHistory)
+                    if (!showPaymentHistory) {
+                      trackEvent("payment_history_viewed")
+                    }
+                  }}
+                  className="h-8 text-xs"
                 >
-                  <FontAwesomeIcon icon={faPen} size="xs" />
+                  <FontAwesomeIcon icon={faClockRotateLeft} size="xs" className="mr-1" />
+                  {showPaymentHistory ? "Hide" : "Show"} Payments
                 </Button>
-              </div>
-            )}
-            <div className="flex items-center gap-4 mt-1">
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onRemove}
+                className="h-8 text-xs text-destructive hover:text-destructive bg-transparent"
+              >
+                <FontAwesomeIcon icon={faTrash} size="xs" className="mr-1" />
+                Remove
+              </Button>
+            </div>
+          </div>
+
+          {/* Child Info - Stack on mobile, flow on desktop */}
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4">
               <Badge variant="outline" className="text-xs">
                 {getChildAge()}
               </Badge>
               <div className="flex items-center gap-1 text-xs text-muted-foreground">
                 <FontAwesomeIcon icon={faCalendar} size="xs" />
-                {daysRemaining} days left in quarter
+                <span className="whitespace-nowrap">{daysRemaining} days left</span>
               </div>
               {childPayments.length > 0 && (
                 <Badge variant="secondary" className="text-xs">
@@ -194,34 +230,35 @@ const ChildCalculator = ({
                 </Badge>
               )}
             </div>
-          </div>
 
-          <div className="flex items-center gap-2">
-            {childPayments.length > 0 && (
+            {/* Mobile Action Buttons */}
+            <div className="flex sm:hidden items-center gap-2">
+              {childPayments.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setShowPaymentHistory(!showPaymentHistory)
+                    if (!showPaymentHistory) {
+                      trackEvent("payment_history_viewed")
+                    }
+                  }}
+                  className="h-8 text-xs flex-1"
+                >
+                  <FontAwesomeIcon icon={faClockRotateLeft} size="xs" className="mr-1" />
+                  {showPaymentHistory ? "Hide Payments" : "Show Payments"}
+                </Button>
+              )}
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  setShowPaymentHistory(!showPaymentHistory)
-                  if (!showPaymentHistory) {
-                    trackEvent("payment_history_viewed")
-                  }
-                }}
-                className="h-8 text-xs"
+                onClick={onRemove}
+                className="h-8 text-xs text-destructive hover:text-destructive bg-transparent flex-1"
               >
-                <FontAwesomeIcon icon={faClockRotateLeft} size="xs" className="mr-1" />
-                {showPaymentHistory ? "Hide" : "Show"} Payments
+                <FontAwesomeIcon icon={faTrash} size="xs" className="mr-1" />
+                Remove
               </Button>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onRemove}
-              className="h-8 text-xs text-destructive hover:text-destructive bg-transparent"
-            >
-              <FontAwesomeIcon icon={faTrash} size="xs" className="mr-1" />
-              Remove
-            </Button>
+            </div>
           </div>
         </div>
       </CardHeader>

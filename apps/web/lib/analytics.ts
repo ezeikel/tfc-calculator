@@ -76,6 +76,11 @@ export type AnalyticsEvent =
   | "compare_scheme_deselected"
   | "compare_calculator_clicked"
 
+  // Regional guide interactions
+  | "regional_guide_page_viewed"
+  | "regional_guide_region_selected"
+  | "regional_guide_calculator_clicked"
+
 export type AnalyticsProperties = {
   // Child properties
   child_age?: number
@@ -120,7 +125,7 @@ export type AnalyticsProperties = {
 
   // Eligibility properties
   scenario_name?: string
-  scenario_result?: "eligible" | "not-eligible"
+  scenario_result?: "eligible" | "not-eligible" | "maybe"
   scenario_index?: number
 
   // Examples properties
@@ -131,6 +136,9 @@ export type AnalyticsProperties = {
   scheme_name?: string
   schemes_selected?: string[]
   comparison_action?: string
+
+  // Regional guide properties
+  selected_region?: string
 }
 
 /**
@@ -142,10 +150,16 @@ export function trackEvent(
   properties?: AnalyticsProperties
 ): void {
   try {
-    // Track with Vercel Analytics
-    track(event, properties || {})
+    // Convert arrays to strings for Vercel Analytics compatibility
+    const vercelProperties = properties ? Object.entries(properties).reduce((acc, [key, value]) => {
+      acc[key] = Array.isArray(value) ? value.join(',') : value
+      return acc
+    }, {} as Record<string, any>) : {}
 
-    // Track with PostHog
+    // Track with Vercel Analytics
+    track(event, vercelProperties)
+
+    // Track with PostHog (supports arrays)
     if (typeof window !== "undefined" && posthog.__loaded) {
       posthog.capture(event, properties || {})
     }

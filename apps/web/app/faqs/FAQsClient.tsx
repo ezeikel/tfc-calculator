@@ -106,12 +106,14 @@ export const FAQsClient = () => {
     )
 
     // Track FAQ interaction
-    trackEvent(isOpening ? "faq_question_opened" : "faq_question_closed", {
-      faq_question: faq.question,
-      faq_category: faq.category,
-      faq_question_index: index,
-      page: "/faqs"
-    })
+    if (faq) {
+      trackEvent(isOpening ? "faq_question_opened" : "faq_question_closed", {
+        faq_question: faq.question,
+        faq_category: faq.category,
+        faq_question_index: index,
+        page: "/faqs"
+      })
+    }
   }
 
   const handleCategoryChange = (category: string) => {
