@@ -23,9 +23,9 @@ const sourceSans = Source_Sans_3({
 })
 
 export const metadata: Metadata = {
-  title: "Tax-Free Childcare Calculator | UK Government 20% Top-Up Calculator 2025",
-  description: "Calculate exactly how much the UK government will top up your Tax-Free Childcare account. Get instant results showing your 20% government contribution, quarterly limits, and payment breakdowns. Free tool for parents using TFC scheme.",
-  keywords: "tax free childcare calculator, TFC calculator, UK childcare vouchers, government 20% contribution, childcare costs calculator, tax free childcare account, childcare support UK, nursery fees calculator",
+  title: "Tax-Free Childcare Calculator 2025 – See Your 20% Government Top-Up Instantly",
+  description: "Use our free UK Tax-Free Childcare Calculator to see how much the government will top up your childcare costs by 20%. Get instant results, payment breakdowns, and quarterly contribution limits – perfect for parents using the Tax-Free Childcare scheme in 2025.",
+  keywords: "tax free childcare calculator, tax-free childcare uk, childcare top-up calculator, government childcare support, childcare costs calculator, uk childcare scheme, childcare savings, tax-free childcare account calculator, 20 percent childcare contribution",
   authors: [{ name: "TFC Calculator" }],
   creator: "TFC Calculator",
   publisher: "TFC Calculator",
@@ -36,14 +36,14 @@ export const metadata: Metadata = {
     locale: "en_GB",
     url: "https://tfccalculator.co.uk",
     siteName: "TFC Calculator",
-    title: "Tax-Free Childcare Calculator | UK Government 20% Top-Up Calculator 2025",
-    description: "Calculate exactly how much the UK government will top up your Tax-Free Childcare account. Get instant results showing your 20% government contribution, quarterly limits, and payment breakdowns.",
+    title: "Free Tax-Free Childcare Calculator 2025 | Check Your 20% Government Top-Up",
+    description: "Find out how much you’ll get from the UK government’s Tax-Free Childcare scheme. See your top-up instantly with our free calculator and save on childcare costs.",
     images: [
       {
         url: "/og-image.jpg",
         width: 1200,
         height: 630,
-        alt: "TFC Calculator - Tax-Free Childcare Calculator for UK Parents",
+        alt: "Free UK Tax-Free Childcare Calculator - 20% Government Top-Up Tool",
       },
     ],
   },
@@ -51,8 +51,8 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     site: "@tfccalculator",
     creator: "@tfccalculator",
-    title: "Tax-Free Childcare Calculator | UK Government 20% Top-Up Calculator 2025",
-    description: "Calculate exactly how much the UK government will top up your Tax-Free Childcare account. Get instant results showing your 20% government contribution.",
+    title: "Tax-Free Childcare Calculator 2025 | See Your 20% Government Top-Up Instantly",
+    description: "Quickly calculate how much the UK government adds to your childcare payments with our free Tax-Free Childcare Calculator.",
     images: ["/twitter-image.jpg"],
   },
   alternates: {
@@ -60,6 +60,7 @@ export const metadata: Metadata = {
   },
   category: "finance",
 }
+
 
 export default function RootLayout({
   children,
