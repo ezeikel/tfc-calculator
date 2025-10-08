@@ -81,6 +81,11 @@ export type AnalyticsEvent =
   | "regional_guide_region_selected"
   | "regional_guide_calculator_clicked"
 
+  // Support page interactions
+  | "support_page_viewed"
+  | "support_contact_clicked"
+  | "support_help_link_clicked"
+
 export type AnalyticsProperties = {
   // Child properties
   child_age?: number
@@ -139,6 +144,9 @@ export type AnalyticsProperties = {
 
   // Regional guide properties
   selected_region?: string
+
+  // Support page properties
+  contact_type?: string
 }
 
 /**
