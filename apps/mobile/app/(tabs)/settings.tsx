@@ -143,6 +143,7 @@ export default function SettingsScreen() {
     }
   };
 
+
   const handleRestorePurchases = async () => {
     const success = await purchaseService.restorePurchases();
     if (success) {
@@ -215,10 +216,40 @@ export default function SettingsScreen() {
                 Premium
               </Text>
 
+              <View className="bg-white rounded-xl p-4 mb-3 shadow-sm border border-gray-100">
+                <Text className="text-lg font-semibold mb-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+                  TFC Calculator Premium
+                </Text>
+                <Text className="text-sm text-gray-600 mb-3" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                  Auto-renewable subscription with enhanced features
+                </Text>
+
+                <View className="mb-3">
+                  <Text className="text-sm font-medium mb-1" style={{ fontFamily: 'PublicSans_500Medium' }}>
+                    Available Subscriptions:
+                  </Text>
+                  <Text className="text-sm text-gray-600" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                    • Monthly subscription (1 month duration)
+                  </Text>
+                  <Text className="text-sm text-gray-600" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                    • Yearly subscription (12 months duration) - Best Value!
+                  </Text>
+                  <Text className="text-sm text-gray-600 mt-1" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                    Pricing shown in your local currency during purchase
+                  </Text>
+                </View>
+
+                <View className="mb-3">
+                  <Text className="text-sm text-gray-600" style={{ fontFamily: 'PublicSans_400Regular' }}>
+                    Subscriptions auto-renew unless cancelled at least 24 hours before the end of the current period.
+                  </Text>
+                </View>
+              </View>
+
               <SettingItem
                 icon="calculator"
-                title="Go Premium ⭐"
-                subtitle="Choose monthly or yearly - best value!"
+                title="Subscribe to Premium"
+                subtitle="Unlock premium features and remove ads"
                 textColor="text-green-600"
                 onPress={showPaywall}
               />
@@ -264,6 +295,26 @@ export default function SettingsScreen() {
               title="Official HMRC Information"
               subtitle="Visit gov.uk for official Tax-Free Childcare information"
               onPress={openHMRCWebsite}
+            />
+          </View>
+
+          <View className="mb-6">
+            <Text className="text-lg font-semibold mb-4 px-2" style={{ fontFamily: 'PublicSans_600SemiBold' }}>
+              Legal
+            </Text>
+
+            <SettingItem
+              icon="globe"
+              title="Terms of Use"
+              subtitle="Read our Terms of Use and End User License Agreement"
+              onPress={() => Linking.openURL('https://tfccalculator.co.uk/terms')}
+            />
+
+            <SettingItem
+              icon="globe"
+              title="Privacy Policy"
+              subtitle="Read our Privacy Policy"
+              onPress={() => Linking.openURL('https://tfccalculator.co.uk/privacy')}
             />
           </View>
 
