@@ -5,8 +5,10 @@ import "./globals.css"
 import { Suspense } from "react"
 import { config } from "@fortawesome/fontawesome-svg-core"
 import { Analytics } from "@vercel/analytics/next"
+import Script from "next/script"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
+import CookieConsent from "@/components/CookieConsent"
 
 config.autoAddCss = false;
 
@@ -69,6 +71,35 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        {/* Google Consent Mode - Must be loaded before AdSense */}
+        <Script id="google-consent-mode" strategy="beforeInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+
+            // Default consent settings (denied until user consents)
+            gtag('consent', 'default', {
+              analytics_storage: 'denied',
+              ad_storage: 'denied',
+              ad_user_data: 'denied',
+              ad_personalization: 'denied',
+              functionality_storage: 'granted',
+              security_storage: 'granted'
+            });
+          `}
+        </Script>
+
+        {/* Google AdSense */}
+        {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (
+          <Script
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        )}
+      </head>
       <body className={`font-source-sans ${publicSans.variable} ${sourceSans.variable}`}>
         <div className="min-h-screen flex flex-col">
           <Header />
@@ -77,6 +108,7 @@ export default function RootLayout({
           </main>
           <Footer />
         </div>
+        <CookieConsent />
         <Analytics />
       </body>
     </html>
