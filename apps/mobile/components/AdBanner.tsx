@@ -14,7 +14,7 @@ export const AdBanner: React.FC<AdBannerProps> = ({ placement, size = BannerAdSi
 
   useEffect(() => {
     const checkAdFreeStatus = async () => {
-      const adFree = await purchaseService.isAdFree();
+      const adFree = await purchaseService.isPremium();
       setIsAdFree(adFree);
     };
     checkAdFreeStatus();
