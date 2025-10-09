@@ -4,6 +4,7 @@ import { getAllPosts } from '@/app/actions/blog';
 import BlogPostGrid from '@/components/BlogPostGrid';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { AdBanner } from '@/components/AdBanner';
 
 export const revalidate = 3600; // revalidate every hour
 
@@ -61,6 +62,9 @@ const BlogIndexPage = async () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Blog Top Ad */}
+      <AdBanner placement="blog-top" size="responsive" />
 
       {/* Blog Posts Grid */}
       <BlogPostGrid posts={posts} tags={allTags} />

@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { AdBanner } from "@/components/AdBanner"
 
 export const metadata: Metadata = {
   title: "How Tax-Free Childcare Works - Complete Guide 2025 | TFC Calculator",
@@ -68,6 +69,9 @@ const HowItWorksPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Top Ad */}
+      <AdBanner placement="info-page" size="responsive" />
 
       {/* Step by Step Process */}
       <Card className="mb-8">
@@ -376,6 +380,9 @@ const HowItWorksPage = () => {
           </div>
         </CardContent>
       </Card>
+
+      {/* Bottom Ad */}
+      <AdBanner placement="info-page" size="banner" />
 
       {/* Call to Action */}
       <Card>

@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { PLACEHOLDER_AVATAR_IMAGE, PLACEHOLDER_BLOG_IMAGE } from '@/constants';
 import { trackEvent, getBlogAnalyticsProperties } from '@/lib/analytics';
+import { AdBanner } from '@/components/AdBanner';
 import type { Post } from '@/types';
 
 interface BlogPostGridProps {
@@ -248,9 +249,16 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
           </Card>
         ) : (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {filteredPosts.map(post => (
-              <Link key={post.meta.slug} href={`/blog/${post.meta.slug}`} onClick={() => handlePostClick(post)}>
-                <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full relative group">
+            {filteredPosts.map((post, index) => (
+              <div key={post.meta.slug}>
+                {/* Add ad every 6 posts */}
+                {index > 0 && index % 6 === 0 && (
+                  <div className="md:col-span-2 lg:col-span-3 mb-6">
+                    <AdBanner placement="blog-content" size="responsive" />
+                  </div>
+                )}
+                <Link href={`/blog/${post.meta.slug}`} onClick={() => handlePostClick(post)}>
+                  <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full relative group">
                   <div className="relative aspect-video">
                     <Image
                       src={post.meta.image || PLACEHOLDER_BLOG_IMAGE}
@@ -307,8 +315,9 @@ const BlogPostGrid = ({ posts, tags }: BlogPostGridProps) => {
                       </div>
                     </div>
                   </CardContent>
-                </Card>
-              </Link>
+                  </Card>
+                </Link>
+              </div>
             ))}
           </div>
         )}

@@ -8,6 +8,7 @@ import { faChevronDown, faChevronUp, faQuestion, faCalculator, faArrowRight } fr
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { AdBanner } from "@/components/AdBanner"
 
 type FAQ = {
   question: string
@@ -155,10 +156,20 @@ export const FAQsClient = () => {
         </CardContent>
       </Card>
 
+      {/* FAQ Top Ad */}
+      <AdBanner placement="faq-section" size="responsive" />
+
       {/* FAQ Items */}
       <div className="space-y-4 mb-12">
         {filteredFAQs.map((faq, index) => (
-          <Card key={index} className="overflow-hidden">
+          <div key={index}>
+            {/* Add ad every 4 FAQs */}
+            {index > 0 && index % 4 === 0 && (
+              <div className="mb-4">
+                <AdBanner placement="faq-section" size="banner" />
+              </div>
+            )}
+            <Card className="overflow-hidden">
             <Collapsible
               open={openItems.includes(index)}
               onOpenChange={() => toggleItem(index)}
@@ -198,7 +209,8 @@ export const FAQsClient = () => {
                 </CardContent>
               </CollapsibleContent>
             </Collapsible>
-          </Card>
+            </Card>
+          </div>
         ))}
       </div>
 

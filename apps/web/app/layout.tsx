@@ -9,6 +9,7 @@ import Script from "next/script"
 import Header from "@/components/Header"
 import Footer from "@/components/Footer"
 import CookieConsent from "@/components/CookieConsent"
+import CookieScriptLoader from "@/components/CookieScriptLoader"
 
 config.autoAddCss = false;
 
@@ -89,6 +90,9 @@ export default function RootLayout({
             });
           `}
         </Script>
+
+        {/* CookieScript - Hidden backend for compliance */}
+        <CookieScriptLoader />
 
         {/* Google AdSense */}
         {process.env.NEXT_PUBLIC_ADSENSE_CLIENT_ID && (

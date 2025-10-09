@@ -13,6 +13,7 @@ import { faCalculator, faCalendar, faPoundSign, faExclamationCircle, faTrash, fa
 import { trackEvent } from "@/lib/analytics"
 import { PaymentConfirmationDialog, type Payment } from "./PaymentConfirmationDialog"
 import { PaymentHistory } from "./PaymentHistory"
+import { AdBanner } from "./AdBanner"
 
 type Child = {
   id: string
@@ -371,6 +372,11 @@ const ChildCalculator = ({
               )}
             </div>
           </>
+        )}
+
+        {/* Ad after calculation results */}
+        {childcareCost && Number.parseFloat(childcareCost) > 0 && (
+          <AdBanner placement="calculator-result" size="medium-rectangle" />
         )}
       </CardContent>
 

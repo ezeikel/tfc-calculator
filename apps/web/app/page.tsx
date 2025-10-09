@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ChildCalculator } from "@/components/ChildCalculator"
 import { AddChildDialog } from "@/components/AddChildDialog"
+import { AdBanner } from "@/components/AdBanner"
 import { useTheme } from "@/hooks/useTheme"
 import { trackEvent, getChildAnalyticsProperties } from "@/lib/analytics"
 import type { Payment } from "@/components/PaymentConfirmationDialog"
@@ -191,6 +192,9 @@ const TaxFreeChildcareCalculator = () => {
           </CardContent>
         </Card>
 
+        {/* Top Homepage Ad */}
+        <AdBanner placement="homepage-top" size="responsive" />
+
         {/* Children List */}
         {children.length === 0 ? (
           <Card className="text-center py-12">
@@ -246,6 +250,9 @@ const TaxFreeChildcareCalculator = () => {
             </Card>
           </div>
         )}
+
+        {/* Bottom Homepage Ad */}
+        <AdBanner placement="homepage-bottom" size="banner" />
 
         {/* Footer */}
         <div className="mt-12 pt-8 border-t text-center">

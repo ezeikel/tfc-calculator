@@ -11,6 +11,15 @@ declare global {
   interface Window {
     gtag: (...args: any[]) => void
     dataLayer: any[]
+    CookieScript: {
+      instance: {
+        show: () => void
+        hide: () => void
+        acceptAction: (categories: string[]) => void
+        acceptAllAction: () => void
+        getCurrentState: () => { action: string; categories: string[] }
+      }
+    }
   }
 }
 
@@ -28,22 +37,66 @@ const CookieConsent = () => {
     analytics: false,
     advertising: false
   })
+  const [cookieScriptLoaded, setCookieScriptLoaded] = useState(false)
 
+  // Check if CookieScript is loaded and if consent has been given
   useEffect(() => {
-    // Check if consent has already been given
-    const consentGiven = localStorage.getItem('cookie-consent')
-    if (!consentGiven) {
-      setShowBanner(true)
-    } else {
-      const savedConsent = JSON.parse(consentGiven)
-      setConsent(savedConsent)
-      updateGoogleConsent(savedConsent)
+    const checkCookieScriptStatus = () => {
+      if (typeof window !== 'undefined' && window.CookieScript?.instance) {
+        setCookieScriptLoaded(true)
+
+        try {
+          // Check if user has already made a choice via CookieScript
+          const currentState = window.CookieScript.instance.getCurrentState()
+          if (currentState && currentState.action === 'accept') {
+            const hasAnalytics = currentState.categories.includes('performance')
+            const hasAdvertising = currentState.categories.includes('targeting')
+
+            // If user has made any choice via CookieScript, don't show our banner
+            if (hasAnalytics || hasAdvertising) {
+              setConsent({
+                necessary: true,
+                analytics: hasAnalytics,
+                advertising: hasAdvertising
+              })
+              setShowBanner(false)
+              return
+            }
+          }
+        } catch (err) {
+          console.warn('Could not get CookieScript state:', err)
+        }
+      }
+
+      // Check if consent has already been given via our custom UI
+      const localConsent = localStorage.getItem('tfc-cookie-consent')
+      if (!localConsent) {
+        setShowBanner(true)
+      } else {
+        const savedConsent = JSON.parse(localConsent)
+        setConsent(savedConsent)
+        syncWithCookieScript(savedConsent)
+      }
     }
+
+    checkCookieScriptStatus()
+
+    // Check periodically until CookieScript loads (max 10 seconds)
+    const interval = setInterval(() => {
+      if (window.CookieScript) {
+        checkCookieScriptStatus()
+        clearInterval(interval)
+      }
+    }, 1000)
+
+    setTimeout(() => clearInterval(interval), 10000)
+
+    return () => clearInterval(interval)
   }, [])
 
-  const updateGoogleConsent = (consentState: ConsentState) => {
+  const syncWithCookieScript = (consentState: ConsentState) => {
+    // Update Google Consent Mode
     if (typeof window !== 'undefined' && window.gtag) {
-      // Update Google Consent Mode
       window.gtag('consent', 'update', {
         analytics_storage: consentState.analytics ? 'granted' : 'denied',
         ad_storage: consentState.advertising ? 'granted' : 'denied',
@@ -52,6 +105,27 @@ const CookieConsent = () => {
         functionality_storage: 'granted',
         security_storage: 'granted'
       })
+    }
+
+    // Sync with CookieScript's backend for compliance
+    if (cookieScriptLoaded && window.CookieScript?.instance) {
+      try {
+        if (consentState.analytics && consentState.advertising) {
+          // Accept all categories
+          window.CookieScript.instance.acceptAllAction()
+        } else if (consentState.analytics || consentState.advertising) {
+          // Accept specific categories
+          const categories = ['strict'] // Always include necessary
+          if (consentState.analytics) categories.push('performance')
+          if (consentState.advertising) categories.push('targeting')
+          window.CookieScript.instance.acceptAction(categories)
+        } else {
+          // Only necessary cookies - accept just strict
+          window.CookieScript.instance.acceptAction(['strict'])
+        }
+      } catch (error) {
+        console.warn('CookieScript sync failed:', error)
+      }
     }
   }
 
@@ -62,8 +136,8 @@ const CookieConsent = () => {
       advertising: true
     }
     setConsent(newConsent)
-    localStorage.setItem('cookie-consent', JSON.stringify(newConsent))
-    updateGoogleConsent(newConsent)
+    localStorage.setItem('tfc-cookie-consent', JSON.stringify(newConsent))
+    syncWithCookieScript(newConsent)
     setShowBanner(false)
     setShowSettings(false)
   }
@@ -75,15 +149,15 @@ const CookieConsent = () => {
       advertising: false
     }
     setConsent(newConsent)
-    localStorage.setItem('cookie-consent', JSON.stringify(newConsent))
-    updateGoogleConsent(newConsent)
+    localStorage.setItem('tfc-cookie-consent', JSON.stringify(newConsent))
+    syncWithCookieScript(newConsent)
     setShowBanner(false)
     setShowSettings(false)
   }
 
   const handleSaveSettings = () => {
-    localStorage.setItem('cookie-consent', JSON.stringify(consent))
-    updateGoogleConsent(consent)
+    localStorage.setItem('tfc-cookie-consent', JSON.stringify(consent))
+    syncWithCookieScript(consent)
     setShowBanner(false)
     setShowSettings(false)
   }
@@ -126,6 +200,11 @@ const CookieConsent = () => {
                         Advertising
                       </Badge>
                     </div>
+                    {cookieScriptLoaded && (
+                      <p className="text-xs text-muted-foreground">
+                        🛡️ Powered by Google-certified compliance system
+                      </p>
+                    )}
                   </div>
                 </div>
 
@@ -262,6 +341,14 @@ const CookieConsent = () => {
                     Save Settings
                   </Button>
                 </div>
+
+                {cookieScriptLoaded && (
+                  <div className="text-center pt-2">
+                    <p className="text-xs text-muted-foreground">
+                      🛡️ Compliance managed by Google-certified system
+                    </p>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
