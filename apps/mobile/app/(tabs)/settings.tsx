@@ -307,14 +307,14 @@ export default function SettingsScreen() {
               icon="globe"
               title="Terms of Use"
               subtitle="Read our Terms of Use and End User License Agreement"
-              onPress={() => Linking.openURL('https://tfccalculator.co.uk/terms')}
+              onPress={() => Linking.openURL('https://tfccalculator.co.uk/terms?src=mobile_app')}
             />
 
             <SettingItem
               icon="globe"
               title="Privacy Policy"
               subtitle="Read our Privacy Policy"
-              onPress={() => Linking.openURL('https://tfccalculator.co.uk/privacy')}
+              onPress={() => Linking.openURL('https://tfccalculator.co.uk/privacy?src=mobile_app')}
             />
           </View>
 

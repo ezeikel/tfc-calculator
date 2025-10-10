@@ -30,6 +30,23 @@ const CookieConsent = () => {
   })
 
   useEffect(() => {
+    // Check if user came from mobile app
+    const urlParams = new URLSearchParams(window.location.search)
+    const fromMobileApp = urlParams.get('src') === 'mobile_app'
+
+    if (fromMobileApp) {
+      // Save mobile app source to localStorage
+      localStorage.setItem('mobile-app-source', 'true')
+      // Don't show cookie banner for mobile app users
+      return
+    }
+
+    // Check if this is a mobile app user from previous visit
+    const isMobileAppUser = localStorage.getItem('mobile-app-source') === 'true'
+    if (isMobileAppUser) {
+      return
+    }
+
     // Check if consent has already been given
     const consentGiven = localStorage.getItem('cookie-consent')
     if (!consentGiven) {
