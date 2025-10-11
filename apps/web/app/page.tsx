@@ -11,6 +11,7 @@ import { ChildCalculator } from "@/components/ChildCalculator"
 import { AddChildDialog } from "@/components/AddChildDialog"
 import { useTheme } from "@/hooks/useTheme"
 import { trackEvent, getChildAnalyticsProperties } from "@/lib/analytics"
+import { APP_STORE_LINKS, APP_STORE_IMAGES } from "@/lib/constants"
 import type { Payment } from "@/components/PaymentConfirmationDialog"
 
 type Child = {
@@ -256,12 +257,12 @@ const TaxFreeChildcareCalculator = () => {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <a
-                href="#"
+                href={APP_STORE_LINKS.GOOGLE}
                 className="hover:opacity-80 transition-opacity"
-                onClick={() => trackEvent("play_store_clicked", { theme: isDark ? "dark" : "light" })}
+                onClick={() => trackEvent("play_store_clicked", { button_location: "homepage", theme: isDark ? "dark" : "light" })}
               >
                 <Image
-                  src={isDark ? "/play-store-dark.svg" : "/play-store-light.svg"}
+                  src={isDark ? APP_STORE_IMAGES.GOOGLE.DARK : APP_STORE_IMAGES.GOOGLE.LIGHT}
                   alt="Get it on Google Play"
                   width={120}
                   height={40}
@@ -270,12 +271,12 @@ const TaxFreeChildcareCalculator = () => {
               </a>
 
               <a
-                href="#"
+                href={APP_STORE_LINKS.APPLE}
                 className="hover:opacity-80 transition-opacity"
-                onClick={() => trackEvent("app_store_clicked", { theme: isDark ? "dark" : "light" })}
+                onClick={() => trackEvent("app_store_clicked", { button_location: "homepage", theme: isDark ? "dark" : "light" })}
               >
                 <Image
-                  src={isDark ? "/app-store-dark.svg" : "/app-store-light.svg"}
+                  src={isDark ? APP_STORE_IMAGES.APPLE.DARK : APP_STORE_IMAGES.APPLE.LIGHT}
                   alt="Download on the App Store"
                   width={120}
                   height={40}

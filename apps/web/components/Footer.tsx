@@ -1,18 +1,25 @@
+'use client';
+
 import Link from 'next/link';
+import Image from 'next/image';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import {
   faCalculator,
   faEnvelope,
 } from '@fortawesome/pro-solid-svg-icons';
 import { faHeart } from '@fortawesome/pro-regular-svg-icons';
+import { useTheme } from '@/hooks/useTheme';
+import { trackEvent } from '@/lib/analytics';
+import { APP_STORE_LINKS, APP_STORE_IMAGES } from '@/lib/constants';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const { isDark } = useTheme();
 
   return (
     <footer className="border-t bg-muted/30">
       <div className="container mx-auto px-4 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8">
           {/* Brand */}
           <div className="space-y-4">
             <Link href="/" className="flex items-center gap-3">
@@ -136,6 +143,39 @@ const Footer = () => {
               >
                 <FontAwesomeIcon icon={faEnvelope} />
                 tfccalculator@chewybytes.com
+              </a>
+            </div>
+          </div>
+
+          {/* Mobile App */}
+          <div className="space-y-4">
+            <h4 className="font-semibold font-public-sans">Mobile App</h4>
+            <div className="space-y-3">
+              <a
+                href={APP_STORE_LINKS.GOOGLE}
+                className="block hover:opacity-80 transition-opacity"
+                onClick={() => trackEvent("play_store_clicked", { button_location: "footer", theme: isDark ? "dark" : "light" })}
+              >
+                <Image
+                  src={isDark ? APP_STORE_IMAGES.GOOGLE.DARK : APP_STORE_IMAGES.GOOGLE.LIGHT}
+                  alt="Get it on Google Play"
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto"
+                />
+              </a>
+              <a
+                href={APP_STORE_LINKS.APPLE}
+                className="block hover:opacity-80 transition-opacity"
+                onClick={() => trackEvent("app_store_clicked", { button_location: "footer", theme: isDark ? "dark" : "light" })}
+              >
+                <Image
+                  src={isDark ? APP_STORE_IMAGES.APPLE.DARK : APP_STORE_IMAGES.APPLE.LIGHT}
+                  alt="Download on the App Store"
+                  width={120}
+                  height={40}
+                  className="h-8 w-auto"
+                />
               </a>
             </div>
           </div>
