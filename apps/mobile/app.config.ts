@@ -59,7 +59,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           "project": "tfc-calculator-app",
           "organization": "chewybytes"
         }
-      ]
+      ],
+      "expo-localization"
     ],
     runtimeVersion: {
       policy: "appVersion",
