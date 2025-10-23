@@ -160,22 +160,10 @@ export const getAllPosts = async (): Promise<Post[]> => {
 
     allSlugs.push(...blobPosts);
   } catch (error) {
-    logger.error('CRITICAL: Error fetching blog posts from blob storage after retries', {
+    logger.error('Error fetching blog posts from blob storage', {
       hasLocalPosts: allSlugs.length > 0,
       error_type: 'blob_fetch_failed',
     }, error instanceof Error ? error : new Error(String(error)));
-
-    // If we have no local posts and blob fetch failed, this is critical
-    if (allSlugs.length === 0) {
-      logger.error('CRITICAL: No posts available from any source', {
-        localDirectoryExists: fs.existsSync(postsDirectory),
-        postsDirectory,
-      });
-      // In production, throw error to trigger error boundary and prevent caching empty result
-      if (process.env.NODE_ENV === 'production') {
-        throw new Error('Failed to fetch blog posts from blob storage and no local posts available');
-      }
-    }
   }
 
   // remove duplicates (prefer local files over blob storage)
