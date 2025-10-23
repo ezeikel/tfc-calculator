@@ -1,5 +1,6 @@
 import Purchases, { CustomerInfo, PurchasesOffering } from 'react-native-purchases';
 import { Platform } from 'react-native';
+import { logger } from '@/lib/logger';
 
 const PREMIUM_ENTITLEMENT = 'premium';
 
@@ -15,16 +16,25 @@ class PurchaseService {
         : process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY;
 
       if (!apiKey) {
-        console.error('RevenueCat API key not found. Please set EXPO_PUBLIC_REVENUECAT_IOS_KEY or EXPO_PUBLIC_REVENUECAT_ANDROID_KEY');
+        logger.error('RevenueCat API key not found', {
+          action: 'purchase_init',
+          platform: Platform.OS,
+        });
         return;
       }
 
       await Purchases.configure({ apiKey });
       this.isInitialized = true;
 
-      console.log('RevenueCat initialized successfully');
+      logger.info('RevenueCat initialized successfully', {
+        action: 'purchase_init',
+        platform: Platform.OS,
+      });
     } catch (error) {
-      console.log('Failed to initialize RevenueCat:', error);
+      logger.purchaseError('Failed to initialize RevenueCat', error instanceof Error ? error : new Error(String(error)), {
+        action: 'purchase_init',
+        platform: Platform.OS,
+      });
     }
   }
 
@@ -35,9 +45,18 @@ class PurchaseService {
       }
 
       const customerInfo = await Purchases.getCustomerInfo();
-      return customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
+      const isPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
+
+      logger.debug('Premium status checked', {
+        action: 'check_premium',
+        isPremium,
+      });
+
+      return isPremium;
     } catch (error) {
-      console.log('Failed to check premium status:', error);
+      logger.purchaseError('Failed to check premium status', error instanceof Error ? error : new Error(String(error)), {
+        action: 'check_premium',
+      });
       return false;
     }
   }
@@ -49,9 +68,18 @@ class PurchaseService {
       }
 
       const offerings = await Purchases.getOfferings();
+
+      logger.debug('Offerings retrieved', {
+        action: 'get_offerings',
+        hasOfferings: !!offerings.current,
+        packageCount: offerings.current?.availablePackages.length || 0,
+      });
+
       return offerings.current;
     } catch (error) {
-      console.log('Failed to get offerings:', error);
+      logger.purchaseError('Failed to get offerings', error instanceof Error ? error : new Error(String(error)), {
+        action: 'get_offerings',
+      });
       return null;
     }
   }
@@ -68,16 +96,33 @@ class PurchaseService {
       );
 
       if (!packageToPurchase) {
-        console.log(`Package ${packageIdentifier} not found`);
+        logger.warn('Package not found', {
+          action: 'purchase_package',
+          packageIdentifier,
+        });
         return false;
       }
+
+      logger.info('Initiating purchase', {
+        action: 'purchase_package',
+        packageIdentifier,
+      });
 
       const { customerInfo } = await Purchases.purchasePackage(packageToPurchase);
       const hasPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
 
+      logger.info('Purchase completed', {
+        action: 'purchase_package',
+        packageIdentifier,
+        hasPremium,
+      });
+
       return hasPremium;
     } catch (error) {
-      console.log('Purchase failed:', error);
+      logger.purchaseError('Purchase failed', error instanceof Error ? error : new Error(String(error)), {
+        action: 'purchase_package',
+        packageIdentifier,
+      });
       return false;
     }
   }
@@ -96,12 +141,23 @@ class PurchaseService {
         await this.initialize();
       }
 
+      logger.info('Restoring purchases', {
+        action: 'restore_purchases',
+      });
+
       const customerInfo = await Purchases.restorePurchases();
       const hasPremium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT] !== undefined;
 
+      logger.info('Purchases restored', {
+        action: 'restore_purchases',
+        hasPremium,
+      });
+
       return hasPremium;
     } catch (error) {
-      console.log('Failed to restore purchases:', error);
+      logger.purchaseError('Failed to restore purchases', error instanceof Error ? error : new Error(String(error)), {
+        action: 'restore_purchases',
+      });
       return false;
     }
   }
@@ -112,9 +168,17 @@ class PurchaseService {
         await this.initialize();
       }
 
-      return await Purchases.getCustomerInfo();
+      const customerInfo = await Purchases.getCustomerInfo();
+
+      logger.debug('Customer info retrieved', {
+        action: 'get_customer_info',
+      });
+
+      return customerInfo;
     } catch (error) {
-      console.log('Failed to get customer info:', error);
+      logger.purchaseError('Failed to get customer info', error instanceof Error ? error : new Error(String(error)), {
+        action: 'get_customer_info',
+      });
       return null;
     }
   }

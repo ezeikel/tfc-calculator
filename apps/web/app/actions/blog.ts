@@ -26,8 +26,41 @@ import {
   type PostMeta,
 } from '@/types';
 import { notFound } from 'next/navigation';
+import { createServerLogger } from '@/lib/logger';
+
+const logger = createServerLogger({ action: 'blog' });
 
 const postsDirectory = path.join(process.cwd(), 'content/blog');
+
+/**
+ * Retry helper for async operations with exponential backoff
+ */
+const retryAsync = async <T>(
+  fn: () => Promise<T>,
+  retries = 3,
+  delay = 1000,
+  context?: string,
+): Promise<T> => {
+  try {
+    return await fn();
+  } catch (error) {
+    if (retries === 0) {
+      logger.error('Max retries exceeded', {
+        context,
+        retriesAttempted: 3,
+      }, error instanceof Error ? error : new Error(String(error)));
+      throw error;
+    }
+    logger.warn('Retry attempt failed', {
+      context,
+      retriesRemaining: retries,
+      nextDelayMs: delay,
+    }, error instanceof Error ? error : new Error(String(error)));
+
+    await new Promise((resolve) => setTimeout(resolve, delay));
+    return retryAsync(fn, retries - 1, delay * 2, context); // exponential backoff
+  }
+};
 
 export const getPostBySlug = async (slug: string): Promise<Post> => {
   const realSlug = slug.replace(/\.mdx$/, '');
@@ -40,18 +73,25 @@ export const getPostBySlug = async (slug: string): Promise<Post> => {
     fileContents = fs.readFileSync(localPath, 'utf8');
   } else {
     // if not found locally, try blob storage
+    const blobPath = STORAGE_PATHS.BLOG_POST.replace('%s', realSlug);
     try {
-      const blobPath = STORAGE_PATHS.BLOG_POST.replace('%s', realSlug);
       const { blobs } = await list({ prefix: blobPath });
 
       if (blobs.length === 0) {
+        logger.warn('Blog post not found in blob storage', {
+          slug: realSlug,
+          blobPath,
+        });
         notFound();
       }
 
       const response = await fetch(blobs[0]?.url ?? '');
       fileContents = await response.text();
     } catch (error) {
-      console.error('Error fetching blog post from blob storage:', error);
+      logger.error('Error fetching blog post from blob storage', {
+        slug: realSlug,
+        blobPath,
+      }, error instanceof Error ? error : new Error(String(error)));
       notFound();
     }
   }
@@ -88,21 +128,54 @@ export const getAllPosts = async (): Promise<Post[]> => {
     allSlugs.push(...localPosts);
   }
 
-  // get posts from blob storage
+  // get posts from blob storage with retry logic
   try {
-    const { blobs } = await list({ prefix: 'blog/' });
-    const blobPosts = await Promise.all(
-      blobs.map(async (blob) => {
-        const response = await fetch(blob.url);
-        const content = await response.text();
-        const { data } = matter(content);
-        const slug = blob.pathname.replace('blog/', '').replace('.mdx', '');
-        return { slug, date: data.date };
-      }),
+    logger.info('Fetching blog posts from blob storage');
+
+    const blobPosts = await retryAsync(
+      async () => {
+        const { blobs } = await list({ prefix: 'blog/' });
+
+        logger.info('Found blobs in storage', {
+          count: blobs.length,
+          hasLocalPosts: allSlugs.length > 0,
+        });
+
+        return await Promise.all(
+          blobs
+            .filter((blob) => blob.pathname.endsWith('.mdx'))
+            .map(async (blob) => {
+              const response = await fetch(blob.url);
+              const content = await response.text();
+              const { data } = matter(content);
+              const slug = blob.pathname.replace('blog/', '').replace('.mdx', '');
+              return { slug, date: data.date };
+            }),
+        );
+      },
+      3, // 3 retries
+      1000, // start with 1 second delay
+      'fetch_blog_posts_from_blob',
     );
+
     allSlugs.push(...blobPosts);
   } catch (error) {
-    console.error('Error fetching blog posts from blob storage:', error);
+    logger.error('CRITICAL: Error fetching blog posts from blob storage after retries', {
+      hasLocalPosts: allSlugs.length > 0,
+      error_type: 'blob_fetch_failed',
+    }, error instanceof Error ? error : new Error(String(error)));
+
+    // If we have no local posts and blob fetch failed, this is critical
+    if (allSlugs.length === 0) {
+      logger.error('CRITICAL: No posts available from any source', {
+        localDirectoryExists: fs.existsSync(postsDirectory),
+        postsDirectory,
+      });
+      // In production, throw error to trigger error boundary and prevent caching empty result
+      if (process.env.NODE_ENV === 'production') {
+        throw new Error('Failed to fetch blog posts from blob storage and no local posts available');
+      }
+    }
   }
 
   // remove duplicates (prefer local files over blob storage)
@@ -133,7 +206,7 @@ export const getCoveredTopics = async (): Promise<string[]> => {
     const posts = await getAllPosts();
     return posts.map((post) => post.meta.slug);
   } catch (error) {
-    console.error('Error getting covered topics:', error);
+    logger.error('Error getting covered topics', {}, error instanceof Error ? error : new Error(String(error)));
     return [];
   }
 };
@@ -222,7 +295,10 @@ const generateBlogImage = async (
 
     return blob.url;
   } catch (error) {
-    console.error('Error generating blog image:', error);
+    logger.error('Error generating blog image', {
+      title,
+      slug,
+    }, error instanceof Error ? error : new Error(String(error)));
     // fallback to a default image if generation fails
     return PLACEHOLDER_BLOG_IMAGE;
   }
@@ -326,7 +402,7 @@ export const generateBlogPostForTopic = async (
   error?: string;
 }> => {
   try {
-    console.log(`Generating blog post for topic: ${topic}`);
+    logger.info('Generating blog post for topic', { topic });
 
     // generate metadata using OpenAI structured outputs
     const meta = await generateBlogMeta(topic);
@@ -341,14 +417,16 @@ export const generateBlogPostForTopic = async (
       }
     } catch (listError) {
       // if list fails, assume post doesn't exist and continue
-      console.warn('Could not check for existing blog post:', listError);
+      logger.warn('Could not check for existing blog post', {
+        slug,
+      }, listError instanceof Error ? listError : new Error(String(listError)));
     }
 
     // get existing posts to avoid duplication
     const coveredTopics = await getCoveredTopics();
 
     // generate content
-    console.log(`Generating content for: ${meta.title}`);
+    logger.info('Generating content for blog post', { title: meta.title, slug });
     const content = await generateBlogContent(meta, coveredTopics);
 
     if (!content) {
@@ -356,7 +434,7 @@ export const generateBlogPostForTopic = async (
     }
 
     // generate custom image for the blog post
-    console.log(`Generating image for: ${meta.title}`);
+    logger.info('Generating image for blog post', { title: meta.title, slug });
     const imageUrl = await generateBlogImage(meta.title, meta.summary, slug);
 
     // create frontmatter with calculated reading time and generated image
@@ -365,7 +443,7 @@ export const generateBlogPostForTopic = async (
     // save the post
     await saveBlogPost(slug, frontmatter, content);
 
-    console.log(`Successfully generated blog post: ${slug}`);
+    logger.info('Successfully generated blog post', { slug, title: meta.title });
 
     return {
       slug,
@@ -373,7 +451,9 @@ export const generateBlogPostForTopic = async (
       success: true,
     };
   } catch (error) {
-    console.error('Error generating blog post:', error);
+    logger.error('Error generating blog post', {
+      topic,
+    }, error instanceof Error ? error : new Error(String(error)));
     return {
       slug: '',
       title: '',

@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { BannerAd, BannerAdSize } from 'react-native-google-mobile-ads';
 import { purchaseService } from '../services/PurchaseService';
 import { bannerUnitId } from '../lib/ads';
+import { logger } from '@/lib/logger';
 
 interface AdBannerProps {
   placement: 'calculator' | 'settings';
@@ -16,9 +17,15 @@ export const AdBanner: React.FC<AdBannerProps> = ({ placement, size = BannerAdSi
     const checkAdFreeStatus = async () => {
       const adFree = await purchaseService.isPremium();
       setIsAdFree(adFree);
+
+      logger.debug('Banner ad status checked', {
+        action: 'banner_check',
+        placement,
+        isAdFree: adFree,
+      });
     };
     checkAdFreeStatus();
-  }, []);
+  }, [placement]);
 
   if (isAdFree) {
     return null; // Don't show ads if user purchased ad removal
@@ -33,7 +40,10 @@ export const AdBanner: React.FC<AdBannerProps> = ({ placement, size = BannerAdSi
           requestNonPersonalizedAdsOnly: true,
         }}
         onAdFailedToLoad={(error) => {
-          console.log('Ad failed to load:', error);
+          logger.error('Banner ad failed to load', {
+            action: 'banner_load_error',
+            placement,
+          }, error instanceof Error ? error : new Error(String(error)));
         }}
       />
     </View>

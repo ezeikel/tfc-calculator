@@ -14,6 +14,7 @@ import { purchaseService } from '../services/PurchaseService';
 import * as Sentry from '@sentry/react-native';
 import Providers from '@/providers';
 import { usePostHog } from 'posthog-react-native';
+import { setLoggerPostHog } from '@/lib/logger';
 
 const SENTRY_DSN = process.env.SENTRY_DSN || process.env.EXPO_PUBLIC_SENTRY_DSN;
 
@@ -37,7 +38,11 @@ const RootLayout = () => {
 
   useEffect(() => {
     if (posthog) {
+      // Track screen views for analytics
       posthog.screen(pathname, params);
+
+      // Initialize logger with PostHog for error tracking
+      setLoggerPostHog(posthog);
     }
   }, [pathname, params, posthog]);
 
